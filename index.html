@@ -544,7 +544,6 @@
     <div class="finbar">
       <div class="seg" id="finCompany">
         <button data-c="Grupo Virax" class="on">Grupo Virax</button>
-        <button data-c="Varejo">Varejo (perfumaria)</button>
       </div>
       <span class="finnote">Ago/2026 com números reais (Conta Azul / planilha). Demais meses: demonstração.</span>
     </div>
@@ -717,18 +716,20 @@ let _lastNum={};
 function sales(){return mode==='demo'?_demo:realSales;}
 function metaFor(ym){const s=mode==='demo'?DEMO_META:realMeta;return +s[ym]||0;}
 function collectedOf(s){let c=+s.entrada||0;(s.parcelas||[]).forEach(p=>{if(p.pago)c+=+p.valor||0;});return c;}
+function salePerda(s){let r=0;(s.parcelas||[]).forEach(p=>{if(!p.pago&&p.perdida)r+=+p.valor||0;});return r;}
+function hasCalote(s){return (s.parcelas||[]).some(p=>p.perdida);}
 
 /* ========== metrics ========== */
 function monthMetrics(ym){
   const ms=sales().filter(s=>ymOf(s.data)===ym);
-  let fat=0,col=0,tcv=0,mrr=0;const orig={},prod={};
-  ms.forEach(s=>{const v=+s.valor||0;fat+=v;col+=collectedOf(s);if(s.tipo==='MRR')mrr+=v;else tcv+=v;
+  let fat=0,col=0,tcv=0,mrr=0,perda=0;const orig={},prod={};
+  ms.forEach(s=>{const v=+s.valor||0;fat+=v;col+=collectedOf(s);perda+=salePerda(s);if(s.tipo==='MRR')mrr+=v;else tcv+=v;
     orig[s.origem]=(orig[s.origem]||0)+v;prod[s.produto]=(prod[s.produto]||0)+v;});
-  return {ms,fat,col,rec:Math.max(0,fat-col),tcv,mrr,n:ms.length,ticket:ms.length?fat/ms.length:0,orig,prod};
+  return {ms,fat,col,rec:Math.max(0,fat-col-perda),perda,tcv,mrr,n:ms.length,ticket:ms.length?fat/ms.length:0,orig,prod};
 }
 // unpaid parcelas across all sales
 function allReceivables(){
-  const out=[];sales().forEach(s=>{(s.parcelas||[]).forEach((p,i)=>{if(!p.pago)out.push({sale:s,pi:i,id:p.id,valor:+p.valor||0,vencimento:p.vencimento||''});});});
+  const out=[];sales().forEach(s=>{(s.parcelas||[]).forEach((p,i)=>{if(!p.pago&&!p.perdida)out.push({sale:s,pi:i,id:p.id,valor:+p.valor||0,vencimento:p.vencimento||''});});});
   out.sort((a,b)=>(a.vencimento||'9999').localeCompare(b.vencimento||'9999'));return out;
 }
 function recByMonth(){
@@ -817,13 +818,13 @@ function renderResumo(){
   // fechamento bar
   document.getElementById('fechSub').textContent='das vendas de '+MONTHS_FULL[(+curYM.slice(5))-1];
   const fb=document.getElementById('fbar');
-  if(m.fat>0){fb.innerHTML=`<i style="width:${m.col/m.fat*100}%;background:linear-gradient(90deg,var(--emerald),var(--emerald-2))"></i><i style="width:${m.rec/m.fat*100}%;background:linear-gradient(90deg,var(--gold),var(--gold-2))"></i>`;}
+  if(m.fat>0){fb.innerHTML=`<i style="width:${m.col/m.fat*100}%;background:linear-gradient(90deg,var(--emerald),var(--emerald-2))"></i><i style="width:${m.rec/m.fat*100}%;background:linear-gradient(90deg,var(--gold),var(--gold-2))"></i>`+(m.perda?`<i style="width:${m.perda/m.fat*100}%;background:linear-gradient(90deg,var(--rose),#ff93a9)"></i>`:'');}
   else fb.innerHTML='<i style="width:100%;background:var(--surface-3)"></i>';
-  requestAnimationFrame(()=>{});
   document.getElementById('flegend').innerHTML=
     `<div><span class="sw" style="background:var(--violet)"></span>Faturado <b class="nums">${compact(m.fat)}</b></div>
      <div><span class="sw" style="background:var(--emerald)"></span>Em caixa <b class="nums">${compact(m.col)}</b></div>
-     <div><span class="sw" style="background:var(--gold)"></span>Falta receber <b class="nums">${compact(m.rec)}</b></div>`;
+     <div><span class="sw" style="background:var(--gold)"></span>Falta receber <b class="nums">${compact(m.rec)}</b></div>`
+     +(m.perda?`<div><span class="sw" style="background:var(--rose)"></span>Perdas/calote <b class="nums">${compact(m.perda)}</b></div>`:'');
 
   renderMeta(m);
   renderDonut(m);
@@ -933,8 +934,9 @@ function renderVendas(){
   const body=document.getElementById('tblBody'),empty=document.getElementById('tblEmpty'),tbl=document.getElementById('tbl');
   if(!rows.length){tbl.hidden=true;empty.hidden=false;return;}
   tbl.hidden=false;empty.hidden=true;
-  body.innerHTML=rows.map(s=>{const col=collectedOf(s),full=col>=(+s.valor||0)-.5;
-    const sc=full?'var(--emerald)':(col>0?'var(--gold)':'var(--rose)');const st=full?'Quitado':(col>0?'Parcial':'Em aberto');
+  body.innerHTML=rows.map(s=>{const col=collectedOf(s),full=col>=(+s.valor||0)-.5,cal=hasCalote(s);
+    const sc=cal?'var(--rose)':(full?'var(--emerald)':(col>0?'var(--gold)':'var(--rose)'));
+    const st=cal?'Calote':(full?'Quitado':(col>0?'Parcial':'Em aberto'));
     const oc=OC[s.origem]||'#A368FF';
     return `<tr><td class="nums" style="white-space:nowrap">${pdate(s.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</td>
       <td><div class="cli"><b>${esc(s.cliente||'—')}</b>${s.instagram?`<small>${esc(s.instagram)}</small>`:''}</div></td>
@@ -1110,14 +1112,6 @@ const FIN_BASE={
     grupos:{'Marketing / Tráfego':146384,'Pessoal (pró-labore+salários)':39215,'Administrativas':21793,'Outras (perdas/sócios)':64283,'Impostos':1248},
     detalhe:[['Marketing / Tráfego',146384],['Salários / Equipe',21200],['Pró-labore',18015],['Softwares / Licenças',14060],['Cursos e Treinamentos',10126],['Honorários (contábil/consultoria)',4640],['Aluguel / Estrutura',2735],['Impostos (ISS)',1248]],
     extra:[['Despesas pessoais dos sócios',19160],['Perdas (não recorrente)',30000],['Empréstimo de sócios (não recorrente)',250000]]
-  },
-  'Varejo':{
-    fat:436646, rec:436646, saldo:111628, _recReal:true,
-    receitaBruta:436646, impostos:58039, custos:217385, pessoal:10992, marketing:0, operacionais:39387,
-    financeiras:-216, outras:0, invest:0,
-    grupos:{'Custos das Vendas (mercadorias)':217385,'Impostos':58039,'Despesas Operacionais':39387,'Pessoal':10992,'Despesas Financeiras':216},
-    detalhe:[['Compra de Mercadorias',217385],['ICMS',52679],['Aluguel (shopping/quiosque)',36075],['Pessoal',10992],['PIS/COFINS + IRPJ',5360],['Softwares / Sistemas',688],['Taxas de Cartão',216]],
-    extra:[]
   }
 };
 const FIN_MONTHS={'2026-05':0.62,'2026-06':0.74,'2026-07':0.88,'2026-08':1.00,'2026-09':0.95,'2026-10':1.08};
