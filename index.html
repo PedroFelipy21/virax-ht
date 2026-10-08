@@ -235,6 +235,8 @@
   .stat .d{width:8px;height:8px;border-radius:50%}
   .cli b{font-weight:700}
   .cli small{color:var(--violet-2);font-size:11.5px;font-weight:600;display:block}
+  .editbtn{border:0;background:transparent;color:var(--faint);cursor:pointer;border-radius:8px;padding:7px;font-size:14px;margin-right:3px}
+  .editbtn:hover{color:var(--violet-2);background:var(--surface-3)}
   .trash{border:0;background:transparent;color:var(--faint);cursor:pointer;border-radius:8px;padding:7px;font-size:14px}
   .trash:hover{color:var(--rose);background:var(--rose-dim)}
   .trash.confirm{color:var(--rose);background:var(--rose-dim);font-size:11px;font-weight:700;padding:7px 10px;width:auto}
@@ -946,7 +948,8 @@ function renderVendas(){
       <td class="money">${brl0.format(s.valor)}</td>
       <td><span class="stat" style="color:${sc}"><span class="d" style="background:${sc}"></span>${st}</span>
         <div class="nums" style="color:var(--faint);font-size:11px">${compact(col)} em caixa</div></td>
-      <td><button class="trash" data-del="${s.id}" title="Excluir">🗑</button></td></tr>`;}).join('');
+      <td style="white-space:nowrap"><button class="editbtn" data-edit="${s.id}" title="Editar">✎</button><button class="trash" data-del="${s.id}" title="Excluir">🗑</button></td></tr>`;}).join('');
+  body.querySelectorAll('.editbtn').forEach(b=>b.onclick=()=>{if(mode!=='demo'&&!canWrite){flash('Entre como gestão para editar.');return;}const s=sales().find(x=>x.id===b.dataset.edit);if(s)openModal(s);});
   body.querySelectorAll('.trash').forEach(b=>b.onclick=()=>{if(b.classList.contains('confirm'))delSale(b.dataset.del);
     else{b.classList.add('confirm');b.textContent='Confirmar?';setTimeout(()=>{b.classList.remove('confirm');b.textContent='🗑';},3000);}});
 }
@@ -1038,15 +1041,37 @@ function buildChips(){
     fProd=c.dataset.v;document.getElementById('customWrap').hidden=(fProd!=='custom');updateSumm();});
   document.querySelectorAll('#origChips .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#origChips .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');fOrig=c.dataset.o;});
 }
-function openModal(){
+let editingId=null, editingParcelas=null;
+function openModal(sale){
   if(!document.getElementById('prodChips').dataset.b){buildChips();document.getElementById('prodChips').dataset.b='1';}
-  document.getElementById('f_data').value=todayISO();
-  ['f_cname','f_cval','f_cliente','f_insta','f_entrada','f_resid'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f_adecidir').checked=false;document.getElementById('parcList').innerHTML='';
-  fTipo='TCV';document.querySelectorAll('#f_tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t==='TCV'));
-  fOrig='Comercial';document.querySelectorAll('#origChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.o==='Comercial'));
-  fProd='25000';document.querySelectorAll('#prodChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.v==='25000'));
-  document.getElementById('customWrap').hidden=true;updateSumm();
+  editingId=sale?sale.id:null; editingParcelas=sale?(sale.parcelas||[]):null;
+  document.getElementById('mTitle').textContent=sale?'Editar venda':'Nova venda';
+  document.getElementById('mSave').textContent=sale?'Salvar alterações':'Salvar venda';
+  document.getElementById('parcList').innerHTML='';
+  if(sale){
+    document.getElementById('f_data').value=sale.data||todayISO();
+    document.getElementById('f_cliente').value=sale.cliente||'';
+    document.getElementById('f_insta').value=sale.instagram||'';
+    document.getElementById('f_entrada').value=sale.entrada||'';
+    document.getElementById('f_resid').value=(sale.residual&&sale.residual.valor)||'';
+    document.getElementById('f_adecidir').checked=!!(sale.residual&&sale.residual.aDecidir);
+    fTipo=sale.tipo||'TCV';document.querySelectorAll('#f_tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t===fTipo));
+    fOrig=ORIGINS.indexOf(sale.origem)>=0?sale.origem:'Outros';document.querySelectorAll('#origChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.o===fOrig));
+    const match=PRODUCTS.find(p=>p.label===sale.produto);
+    if(match){fProd=String(match.valor);document.getElementById('customWrap').hidden=true;document.getElementById('f_cname').value='';document.getElementById('f_cval').value='';}
+    else{fProd='custom';document.getElementById('customWrap').hidden=false;document.getElementById('f_cname').value=sale.produto||'';document.getElementById('f_cval').value=sale.valor||'';}
+    document.querySelectorAll('#prodChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===fProd));
+    (sale.parcelas||[]).forEach(p=>addParcRow(p.valor,p.vencimento));
+  }else{
+    document.getElementById('f_data').value=todayISO();
+    ['f_cname','f_cval','f_cliente','f_insta','f_entrada','f_resid'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f_adecidir').checked=false;
+    fTipo='TCV';document.querySelectorAll('#f_tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t==='TCV'));
+    fOrig='Comercial';document.querySelectorAll('#origChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.o==='Comercial'));
+    fProd='25000';document.querySelectorAll('#prodChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.v==='25000'));
+    document.getElementById('customWrap').hidden=true;
+  }
+  updateSumm();
   mscrim.classList.add('show');
 }
 function closeModal(){mscrim.classList.remove('show');}
@@ -1066,16 +1091,26 @@ function updateSumm(){const total=getValor();const ent=+document.getElementById(
   else{el.className='summ bad';el.innerHTML=base+`<span class="status">${brl0.format(-diff)} a mais</span>`;}
 }
 async function saveSale(){const valor=getValor();if(!valor){flash('Escolha o produto / informe o valor.');return;}
-  const sale={data:document.getElementById('f_data').value||todayISO(),cliente:document.getElementById('f_cliente').value.trim(),
+  let parc=readParc();
+  if(editingId&&Array.isArray(editingParcelas)){ // preserva status pago/perda das parcelas na edição (por posição+valor+data)
+    parc=parc.map((p,i)=>{const o=editingParcelas[i];if(o&&+o.valor===+p.valor&&(o.vencimento||'')===(p.vencimento||'')){const np=Object.assign({},p,{pago:!!o.pago});if(o.dataPagamento)np.dataPagamento=o.dataPagamento;if(o.perdida)np.perdida=true;return np;}return p;});
+  }
+  const base={data:document.getElementById('f_data').value||todayISO(),cliente:document.getElementById('f_cliente').value.trim(),
     instagram:document.getElementById('f_insta').value.trim(),produto:getProd(),origem:fOrig,tipo:fTipo,valor,
-    entrada:+document.getElementById('f_entrada').value||0,parcelas:readParc(),
-    residual:{valor:+document.getElementById('f_resid').value||0,aDecidir:document.getElementById('f_adecidir').checked},criadoEm:new Date().toISOString()};
-  const id=uid('s');
-  if(mode==='demo'){sale.id=id;sale._demo=true;_demo.push(sale);closeModal();curYM=ymOf(sale.data);render();flash('Venda adicionada (demonstração).');return;}
-  const {criadoEm,...row}=sale;
-  const {error}=await SB.from('sales').insert([row]);
-  if(error){flash('Não foi possível salvar — entre como gestão.');return;}
-  closeModal();curYM=ymOf(sale.data);flash('Venda salva.');
+    entrada:+document.getElementById('f_entrada').value||0,parcelas:parc,
+    residual:{valor:+document.getElementById('f_resid').value||0,aDecidir:document.getElementById('f_adecidir').checked}};
+  if(mode==='demo'){
+    if(editingId){const i=_demo.findIndex(s=>s.id===editingId);if(i>=0)_demo[i]=Object.assign({},_demo[i],base);}
+    else{base.id=uid('s');base._demo=true;_demo.push(base);}
+    closeModal();curYM=ymOf(base.data);render();flash(editingId?'Venda atualizada.':'Venda adicionada (demonstração).');return;
+  }
+  if(editingId){const {error}=await SB.from('sales').update(base).eq('id',editingId);
+    if(error){flash('Não foi possível atualizar — entre como gestão.');return;}
+    closeModal();curYM=ymOf(base.data);flash('Venda atualizada.');
+  }else{const {error}=await SB.from('sales').insert([base]);
+    if(error){flash('Não foi possível salvar — entre como gestão.');return;}
+    closeModal();curYM=ymOf(base.data);flash('Venda salva.');
+  }
 }
 
 /* ========== toast ========== */
