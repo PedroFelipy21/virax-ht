@@ -306,6 +306,41 @@
   @media(max-width:1080px){.kpis{grid-template-columns:1fr 1fr 1fr}.kpi.hero{grid-column:span 3}.fechamento{grid-template-columns:1fr}}
   @media(max-width:860px){.grid2{grid-template-columns:1fr}.rsummary{grid-template-columns:1fr}}
   @media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}.kpi.hero{grid-column:span 2}.row2{grid-template-columns:1fr}.monthsel .ml{min-width:116px}.cols{gap:8px}}
+  /* ===== troca de mundo HT / Financeiro ===== */
+  .worldsw{display:flex;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px;width:fit-content;max-width:100%;margin:2px 0 20px}
+  .worldsw button{border:0;background:transparent;color:var(--muted);font-weight:800;font-size:15px;padding:12px 26px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:.16s}
+  .worldsw button .ic{font-size:16px}
+  .worldsw button.on[data-world="ht"]{background:linear-gradient(135deg,var(--violet-3),var(--violet-deep));color:#fff;box-shadow:var(--shadow-sm)}
+  .worldsw button.on[data-world="fin"]{background:linear-gradient(135deg,#1F9E66,#0E6B43);color:#fff;box-shadow:var(--shadow-sm)}
+  /* financeiro */
+  .finbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  .finnote{color:var(--faint);font-size:12px;font-weight:600}
+  .drerow{display:grid;grid-template-columns:1fr auto 52px;gap:8px 16px;align-items:baseline;padding:10px 0;border-bottom:1px solid rgba(172,130,255,.06)}
+  .drerow .lb{font-size:13.5px;font-weight:600;color:var(--muted)}
+  .drerow .rv{font-family:var(--ff-d);font-weight:700;text-align:right;font-size:14px;white-space:nowrap}
+  .drerow .pc{font-family:var(--ff-d);color:var(--faint);font-size:12px;text-align:right}
+  .drerow.tot{border-top:1px solid var(--border);border-bottom:none;margin-top:2px}
+  .drerow.tot .lb{color:var(--text);font-weight:800;font-family:var(--ff-d);font-size:14px}
+  .drerow.tot .rv{font-size:16px}
+  .drerow.neg .rv{color:var(--rose)} .drerow.pos .rv{color:var(--emerald)}
+  .diag{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:16px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)}
+  .diag .big{font-family:var(--ff-d);font-weight:800;font-size:30px;line-height:1}
+  .diag .big small{display:block;font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:5px}
+  .diag .sep{color:var(--faint);font-size:22px}
+  .detrow{display:grid;grid-template-columns:170px 1fr auto 52px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(172,130,255,.06)}
+  .detrow .nm{font-size:13px;font-weight:700}
+  .detrow .tr{height:9px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+  .detrow .tr i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--violet),var(--violet-2));width:0;transition:width .8s}
+  .detrow .amt{font-family:var(--ff-d);font-weight:700;text-align:right;font-size:13.5px;white-space:nowrap}
+  .detrow .pc{font-family:var(--ff-d);color:var(--faint);font-size:12px;text-align:right}
+  .finextra{margin-top:16px;padding:13px 15px;border-radius:12px;background:var(--rose-dim);border:1px solid rgba(255,107,138,.25)}
+  .finextra .h{font-size:11.5px;font-weight:800;color:var(--rose);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px}
+  .finextra .er{display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:3px 0;color:var(--text)}
+  .finextra .er b{font-family:var(--ff-d)}
+  @media(max-width:620px){
+    .worldsw{width:100%}.worldsw button{flex:1;justify-content:center;padding:12px 10px;font-size:14px}
+    .detrow{grid-template-columns:1fr auto;row-gap:6px}.detrow .tr{grid-column:1/-1;order:3}.detrow .pc{display:none}
+  }
   /* ---- mobile only (desktop inalterado) ---- */
   @media(max-width:620px){
     .shell{padding-inline:14px}
@@ -386,6 +421,12 @@
     </div>
   </header>
 
+  <div class="worldsw" id="worldsw">
+    <button data-world="ht" class="on"><span class="ic">💜</span> High Ticket</button>
+    <button data-world="fin"><span class="ic">💰</span> Financeiro</button>
+  </div>
+
+  <div id="worldHT">
   <nav class="tabs" id="tabs">
     <button data-tab="resumo" class="on"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" stroke="currentColor" stroke-width="2"/><rect x="13" y="3" width="8" height="5" rx="2" stroke="currentColor" stroke-width="2"/><rect x="13" y="10" width="8" height="11" rx="2" stroke="currentColor" stroke-width="2"/><rect x="3" y="13" width="8" height="8" rx="2" stroke="currentColor" stroke-width="2"/></svg>Resumo</button>
     <button data-tab="receb"><svg viewBox="0 0 24 24" fill="none"><path d="M3 10h18M7 3v4M17 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/></svg>Recebíveis<span class="badge" id="ovBadge" hidden></span></button>
@@ -473,6 +514,38 @@
         <div style="margin-top:22px" class="phd"><h2>Por origem</h2><small>participação</small></div>
         <div class="splitbars" id="splitOrig"></div>
       </div>
+    </div>
+  </section>
+
+  </div><!--/worldHT-->
+
+  <section id="worldFin" hidden>
+    <div class="finbar">
+      <div class="seg" id="finCompany">
+        <button data-c="Grupo Virax" class="on">Grupo Virax</button>
+        <button data-c="Varejo">Varejo (perfumaria)</button>
+      </div>
+      <span class="finnote">Ago/2026 com números reais (Conta Azul / planilha). Demais meses: demonstração.</span>
+    </div>
+    <div class="kpis" id="finKpis"></div>
+    <div class="grid2">
+      <div class="panel pad">
+        <div class="phd"><h2>DRE resumida</h2><small id="finDreSub"></small></div>
+        <div id="finDre"></div>
+      </div>
+      <div class="panel pad">
+        <div class="phd"><h2>Para onde foi o dinheiro</h2><small id="finDiagSub"></small></div>
+        <div id="finDiag"></div>
+        <div class="bars" id="finGrupos" style="margin-top:18px"></div>
+      </div>
+    </div>
+    <div class="panel pad" style="margin-top:16px">
+      <div class="phd"><h2>Detalhamento dos gastos</h2><small>R$ e % sobre a receita</small></div>
+      <div id="finDetalhe"></div>
+    </div>
+    <div class="panel pad" style="margin-top:16px">
+      <div class="phd"><h2>Evolução do faturamento</h2><small>últimos meses</small></div>
+      <div class="trend" id="finTrend"></div>
     </div>
   </section>
 
@@ -647,6 +720,12 @@ function render(){
   document.getElementById('mLabel').childNodes[0].nodeValue=monthLabelFull(curYM);
   document.getElementById('demoBar').classList.toggle('show',mode==='demo');
   document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  applyWorld();
+  if(world==='fin'){ finRender();
+    document.getElementById('foot').textContent = mode==='demo'
+      ? 'Financeiro — Ago/2026 com dados reais (Conta Azul / planilha); demais meses demonstração.'
+      : 'Financeiro · dados reais';
+    return; }
   const {over}=recByMonth();const ovb=document.getElementById('ovBadge');
   if(over>0){ovb.hidden=false;ovb.textContent='!';}else ovb.hidden=true;
 
@@ -979,6 +1058,127 @@ document.getElementById('addParc').onclick=()=>addParcRow();
 ['f_entrada','f_resid','f_cval'].forEach(id=>document.getElementById(id).oninput=updateSumm);
 document.getElementById('f_tipo').onclick=e=>{const b=e.target.closest('button');if(!b)return;fTipo=b.dataset.t;document.querySelectorAll('#f_tipo button').forEach(x=>x.classList.toggle('on',x===b));};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(mscrim.classList.contains('show'))closeModal();else if(document.getElementById('drawer').classList.contains('show'))closeDrawer();}});
+
+/* ========== FINANCEIRO ========== */
+let world=(()=>{try{return localStorage.getItem('vx_world')||'ht'}catch(e){return 'ht'}})();
+let finCompany='Grupo Virax';
+const FIN_BASE={
+  'Grupo Virax':{
+    fat:323600, rec:298000, saldo:185000, _recReal:false,
+    receitaBruta:323600, impostos:1248, custos:0, pessoal:39215, marketing:146384, operacionais:21793,
+    financeiras:7498, outras:-62813, invest:-264655,
+    grupos:{'Marketing / Tráfego':146384,'Pessoal (pró-labore+salários)':39215,'Administrativas':21793,'Outras (perdas/sócios)':64283,'Impostos':1248},
+    detalhe:[['Marketing / Tráfego',146384],['Salários / Equipe',21200],['Pró-labore',18015],['Softwares / Licenças',14060],['Cursos e Treinamentos',10126],['Honorários (contábil/consultoria)',4640],['Aluguel / Estrutura',2735],['Impostos (ISS)',1248]],
+    extra:[['Despesas pessoais dos sócios',19160],['Perdas (não recorrente)',30000],['Empréstimo de sócios (não recorrente)',250000]]
+  },
+  'Varejo':{
+    fat:436646, rec:436646, saldo:111628, _recReal:true,
+    receitaBruta:436646, impostos:58039, custos:217385, pessoal:10992, marketing:0, operacionais:39387,
+    financeiras:-216, outras:0, invest:0,
+    grupos:{'Custos das Vendas (mercadorias)':217385,'Impostos':58039,'Despesas Operacionais':39387,'Pessoal':10992,'Despesas Financeiras':216},
+    detalhe:[['Compra de Mercadorias',217385],['ICMS',52679],['Aluguel (shopping/quiosque)',36075],['Pessoal',10992],['PIS/COFINS + IRPJ',5360],['Softwares / Sistemas',688],['Taxas de Cartão',216]],
+    extra:[]
+  }
+};
+const FIN_MONTHS={'2026-05':0.62,'2026-06':0.74,'2026-07':0.88,'2026-08':1.00,'2026-09':0.95,'2026-10':1.08};
+function prevMonthKey(ym){const d=pdate(ym+'-01');d.setMonth(d.getMonth()-1);return d.toISOString().slice(0,7);}
+function scaleFin(b,f){
+  const n=k=>Math.round((b[k]||0)*f);
+  const o={fat:n('fat'),rec:n('rec'),saldo:n('saldo'),_recReal:b._recReal,
+    receitaBruta:n('receitaBruta'),impostos:n('impostos'),custos:n('custos'),pessoal:n('pessoal'),
+    marketing:n('marketing'),operacionais:n('operacionais'),financeiras:Math.round(b.financeiras*f),
+    outras:Math.round(b.outras*f),invest:Math.round(b.invest*f)};
+  o.grupos={};Object.entries(b.grupos).forEach(([k,v])=>o.grupos[k]=Math.round(v*f));
+  o.detalhe=b.detalhe.map(([nm,v])=>[nm,Math.round(v*f)]);
+  o.extra=(f===1&&b.extra)?b.extra:[];
+  return o;
+}
+function finCompute(v){
+  const recLiq=v.receitaBruta-v.impostos, lucroBruto=recLiq-v.custos, despOp=v.pessoal+v.marketing+v.operacionais;
+  const resultadoOp=lucroBruto-despOp, resultadoLiq=resultadoOp+v.financeiras+v.outras, resultadoFinal=resultadoLiq+v.invest;
+  const despesas=v.impostos+v.custos+v.pessoal+v.marketing+v.operacionais;
+  return {recLiq,lucroBruto,despOp,resultadoOp,resultadoLiq,resultadoFinal,despesas};
+}
+function finCard(color,cap,val,delta,sub){
+  const dh=delta==null?'':` <span style="color:${delta>=0?'var(--emerald)':'var(--rose)'};font-weight:700;white-space:nowrap">${delta>=0?'▲':'▼'} ${Math.abs(Math.round(delta))}%</span>`;
+  const neg=val<0;
+  return `<div class="kpi static"><div class="cap"><span class="dot" style="background:${color}"></span>${cap}</div>
+    <div class="val nums" style="${neg?'color:var(--rose)':''}">${neg?'−':''}${compact(Math.abs(val))}</div>
+    <div class="exact">${sub||''}${dh}</div></div>`;
+}
+function finDreRows(v,d){
+  const R=v.receitaBruta||1; const pc=x=>Math.round(Math.abs(x)/R*100)+'%';
+  const row=(lb,val,cls)=>`<div class="drerow ${cls||''}"><div class="lb">${lb}</div><div class="rv ${val<0?'neg':''}">${val<0?'−':''}${brl0.format(Math.abs(val))}</div><div class="pc">${pc(val)}</div></div>`;
+  let h=row('Receita Bruta',v.receitaBruta,'');
+  if(v.impostos)h+=row('(−) Impostos / Deduções',-v.impostos,'');
+  h+=row('= Receita Líquida',d.recLiq,'tot');
+  if(v.custos)h+=row('(−) Custos das Vendas',-v.custos,'');
+  h+=row('= Lucro Bruto',d.lucroBruto,'tot');
+  if(v.marketing)h+=row('(−) Marketing / Tráfego',-v.marketing,'');
+  if(v.pessoal)h+=row('(−) Pessoal',-v.pessoal,'');
+  if(v.operacionais)h+=row('(−) Despesas Administrativas',-v.operacionais,'');
+  h+=row('= Resultado Operacional',d.resultadoOp,'tot '+(d.resultadoOp>=0?'pos':'neg'));
+  if(v.financeiras)h+=row((v.financeiras>=0?'(+)':'(−)')+' Resultado Financeiro',v.financeiras,'');
+  if(v.outras)h+=row('(−) Outras (não operacionais)',v.outras,'');
+  if(v.financeiras||v.outras)h+=row('= Resultado Líquido',d.resultadoLiq,'tot '+(d.resultadoLiq>=0?'pos':'neg'));
+  if(v.invest)h+=row('(−) Investimentos / Empréstimos',v.invest,'');
+  if(v.invest)h+=row('= Resultado Final',d.resultadoFinal,'tot '+(d.resultadoFinal>=0?'pos':'neg'));
+  return h;
+}
+function renderFinTrend(comp){
+  const base=FIN_BASE[comp];const keys=Object.keys(FIN_MONTHS);
+  const data=keys.map(ym=>({ym,fat:scaleFin(base,FIN_MONTHS[ym]).fat}));
+  const max=Math.max(1,...data.map(x=>x.fat));
+  document.getElementById('finTrend').innerHTML=data.map(x=>`<div class="tbar ${x.ym===curYM?'cur':''}">
+    <div class="tv nums">${compact(x.fat)}</div><div class="tb" data-h="${x.fat/max*100}"></div>
+    <div class="tl">${MONTHS[(+x.ym.slice(5))-1]}</div></div>`).join('');
+  requestAnimationFrame(()=>{document.querySelectorAll('#finTrend .tb').forEach(b=>b.style.height=(b.dataset.h||0)+'%');});
+}
+function finRender(){
+  const comp=finCompany,base=FIN_BASE[comp],f=FIN_MONTHS[curYM];
+  document.querySelectorAll('#finCompany button').forEach(b=>b.classList.toggle('on',b.dataset.c===comp));
+  const K=document.getElementById('finKpis'),DRE=document.getElementById('finDre'),DI=document.getElementById('finDiag'),
+    GR=document.getElementById('finGrupos'),DET=document.getElementById('finDetalhe'),TR=document.getElementById('finTrend');
+  if(f==null){
+    K.innerHTML='<div class="empty" style="grid-column:1/-1;padding:40px"><b>Sem dados financeiros neste mês</b>Os dados de exemplo vão de mai a out/2026 — navegue até um desses meses.</div>';
+    DRE.innerHTML='';DI.innerHTML='';GR.innerHTML='';DET.innerHTML='';TR.innerHTML='';
+    document.getElementById('finDreSub').textContent='';document.getElementById('finDiagSub').textContent='';return;
+  }
+  const v=scaleFin(base,f),d=finCompute(v);
+  const pk=prevMonthKey(curYM),pf=FIN_MONTHS[pk],vp=pf!=null?scaleFin(base,pf):null,dp=vp?finCompute(vp):null;
+  const dl=(c,p)=>(p!=null&&p!==0)?((c-p)/Math.abs(p)*100):null;
+  K.innerHTML=
+    finCard('var(--violet-2)','Faturado',v.fat,dl(v.fat,vp&&vp.fat),'receita bruta')+
+    finCard('var(--emerald)','Recebido',v.rec,dl(v.rec,vp&&vp.rec),v._recReal?'em caixa':'estimado · conectar Hotmart')+
+    finCard('var(--rose)','Despesas',d.despesas,dl(d.despesas,dp&&dp.despesas),'gastos operacionais')+
+    finCard(d.resultadoOp>=0?'var(--emerald)':'var(--rose)','Resultado',d.resultadoOp,dl(d.resultadoOp,dp&&dp.resultadoOp),'operacional do mês')+
+    finCard('var(--gold)','Saldo de caixa',v.saldo,null,v._recReal?'hoje':'estimado');
+  DRE.innerHTML=finDreRows(v,d);
+  document.getElementById('finDreSub').textContent=MONTHS_FULL[(+curYM.slice(5))-1]+' · % sobre receita';
+  const gastoPc=Math.round(d.despesas/(v.receitaBruta||1)*100), lucroPc=Math.round(d.resultadoOp/(v.receitaBruta||1)*100);
+  DI.innerHTML=`<div class="diag"><div class="big" style="color:var(--rose)">R$ ${gastoPc}<small>de cada R$100 em gastos</small></div>
+    <div class="sep">→</div><div class="big" style="color:var(--emerald)">R$ ${lucroPc}<small>sobram de lucro</small></div></div>`;
+  const ge=Object.entries(v.grupos).sort((a,b)=>b[1]-a[1]),gmax=Math.max(1,...ge.map(e=>e[1])),gtot=ge.reduce((s,e)=>s+e[1],0)||1;
+  GR.innerHTML=ge.map(([k,val])=>`<div class="barrow"><div class="lbl"><span class="sw" style="background:var(--violet)"></span><span>${esc(k)}</span></div>
+    <div class="bartrack"><i style="background:linear-gradient(90deg,var(--violet),var(--violet-2))" data-w="${val/gmax*100}"></i></div>
+    <div class="amt nums">${compact(val)}<small>${Math.round(val/gtot*100)}%</small></div></div>`).join('');
+  document.getElementById('finDiagSub').textContent='total de gastos: '+compact(gtot);
+  const de=v.detalhe.slice().sort((a,b)=>b[1]-a[1]),dmax=Math.max(1,...de.map(e=>e[1]));
+  DET.innerHTML=de.map(([nm,val])=>`<div class="detrow"><div class="nm">${esc(nm)}</div>
+    <div class="tr"><i data-w="${val/dmax*100}"></i></div><div class="amt nums">${brl0.format(val)}</div>
+    <div class="pc">${(val/(v.receitaBruta||1)*100).toFixed(1)}%</div></div>`).join('')
+    + (v.extra&&v.extra.length?`<div class="finextra"><div class="h">⚠️ Não recorrentes (fora da operação)</div>${v.extra.map(([nm,val])=>`<div class="er">${esc(nm)}<b class="nums">${brl0.format(val)}</b></div>`).join('')}</div>`:'');
+  renderFinTrend(comp);
+  requestAnimationFrame(()=>{document.querySelectorAll('#finGrupos .bartrack i,#finDetalhe .tr i').forEach(i=>i.style.width=(i.dataset.w||0)+'%');});
+}
+function applyWorld(){
+  const ht=document.getElementById('worldHT'),fin=document.getElementById('worldFin');
+  if(ht)ht.hidden=world!=='ht'; if(fin)fin.hidden=world!=='fin';
+  const add=document.getElementById('addBtn'); if(add)add.hidden=world!=='ht';
+  document.querySelectorAll('#worldsw button').forEach(b=>b.classList.toggle('on',b.dataset.world===world));
+}
+document.getElementById('worldsw').onclick=e=>{const b=e.target.closest('button');if(!b)return;world=b.dataset.world;try{localStorage.setItem('vx_world',world)}catch(_){}render();};
+document.getElementById('finCompany').onclick=e=>{const b=e.target.closest('button');if(!b)return;finCompany=b.dataset.c;finRender();};
 
 /* ========== boot (Supabase) ========== */
 setTab(tab);
