@@ -586,6 +586,19 @@
   <div class="db" id="drBody"></div>
 </aside>
 
+<!-- login gestão -->
+<div class="mscrim" id="authScrim">
+  <div class="modal" style="max-width:420px" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="mh"><h3 id="authTitle">Entrar — gestão</h3><button class="x" id="authClose" aria-label="Fechar">✕</button></div>
+    <div class="mb">
+      <div class="field"><label for="au_email">E-mail</label><input id="au_email" type="email" placeholder="voce@grupovirax.com" autocomplete="username"></div>
+      <div class="field"><label for="au_pass">Senha</label><input id="au_pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <div id="au_msg" style="font-size:12.5px;font-weight:700;color:var(--rose);min-height:16px"></div>
+    </div>
+    <div class="mfoot"><button class="btn" id="authCancel">Cancelar</button><button class="btn primary" id="authEnter">Entrar</button></div>
+  </div>
+</div>
+
 <!-- modal -->
 <div class="mscrim" id="mscrim">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
@@ -1221,13 +1234,26 @@ async function reloadConfig(){if(!SB)return;const {data}=await SB.from('config')
 function updateAuth(){canWrite=!!session;const b=document.getElementById('authBtn');
   if(b){b.hidden=!configured;b.textContent=session?('Sair · '+((session.user&&session.user.email)||'gestão')):'Entrar (gestão)';}
   render();}
-async function doAuth(){
+function doAuth(){
   if(!SB){flash('Backend não configurado.');return;}
-  if(session){await SB.auth.signOut();session=null;flash('Você saiu.');updateAuth();return;}
-  const email=prompt('E-mail de gestão (recebe o link de acesso por e-mail):');if(!email)return;
-  const {error}=await SB.auth.signInWithOtp({email:email.trim(),options:{emailRedirectTo:location.href.split('#')[0]}});
-  flash(error?('Erro: '+error.message):('Link enviado para '+email+'. Abra o e-mail para entrar.'));
+  if(session){SB.auth.signOut().then(()=>{session=null;flash('Você saiu.');updateAuth();});return;}
+  document.getElementById('au_email').value='';document.getElementById('au_pass').value='';document.getElementById('au_msg').textContent='';
+  document.getElementById('authScrim').classList.add('show');
+  setTimeout(()=>document.getElementById('au_email').focus(),60);
 }
+async function doLogin(){
+  const email=document.getElementById('au_email').value.trim(),pass=document.getElementById('au_pass').value,msg=document.getElementById('au_msg');
+  if(!email||!pass){msg.style.color='var(--rose)';msg.textContent='Preencha e-mail e senha.';return;}
+  msg.style.color='var(--muted)';msg.textContent='Entrando…';
+  const {data,error}=await SB.auth.signInWithPassword({email,password:pass});
+  if(error){msg.style.color='var(--rose)';msg.textContent='E-mail ou senha incorretos.';return;}
+  session=data.session;document.getElementById('authScrim').classList.remove('show');flash('Bem-vindo! Você já pode lançar vendas.');updateAuth();
+}
+document.getElementById('authClose').onclick=()=>document.getElementById('authScrim').classList.remove('show');
+document.getElementById('authCancel').onclick=()=>document.getElementById('authScrim').classList.remove('show');
+document.getElementById('authEnter').onclick=doLogin;
+document.getElementById('authScrim').addEventListener('click',e=>{if(e.target.id==='authScrim')document.getElementById('authScrim').classList.remove('show');});
+document.getElementById('au_pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 function initSupabase(){
   const url=window.VX_SUPABASE_URL,key=window.VX_SUPABASE_ANON_KEY;
   const authB=document.getElementById('authBtn');if(authB)authB.onclick=doAuth;
