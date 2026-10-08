@@ -337,6 +337,27 @@
   .finextra .h{font-size:11.5px;font-weight:800;color:var(--rose);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px}
   .finextra .er{display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding:3px 0;color:var(--text)}
   .finextra .er b{font-family:var(--ff-d)}
+  .finstats{display:flex;gap:10px;flex-wrap:wrap;margin:-4px 0 16px}
+  .fstat{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:10px 15px;display:flex;flex-direction:column;gap:3px;flex:1;min-width:150px}
+  .fstat .k{color:var(--muted);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .fstat .v{font-family:var(--ff-d);font-weight:800;font-size:17px}
+  .cflegend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .cflegend div{display:flex;align-items:center;gap:7px}
+  .cflegend .sw{width:11px;height:11px;border-radius:3px}
+  .cfchart{display:flex;align-items:flex-end;gap:12px;height:210px;padding-top:6px}
+  .cfcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;height:100%;justify-content:flex-end;min-width:0}
+  .cfbars{display:flex;align-items:flex-end;gap:5px;height:100%;width:100%;justify-content:center}
+  .cfb{width:17px;max-width:42%;border-radius:6px 6px 2px 2px;height:0;transition:height .9s cubic-bezier(.2,.8,.2,1);min-height:3px}
+  .cfb.fat{background:linear-gradient(180deg,var(--violet-2),var(--violet-3))}
+  .cfb.desp{background:linear-gradient(180deg,#ff8aa3,var(--rose))}
+  .cfcol.cur .cfb.fat{background:linear-gradient(180deg,var(--emerald-2),var(--emerald))}
+  .cflabel{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase}
+  .cflucro{font-family:var(--ff-d);font-weight:700;font-size:11.5px}
+  .cflucro.pos{color:var(--emerald)} .cflucro.neg{color:var(--rose)}
+  @media(max-width:620px){
+    .finstats{gap:8px}.fstat{min-width:calc(50% - 4px)}
+    .cfchart{gap:7px}.cfb{width:13px}
+  }
   @media(max-width:620px){
     .worldsw{width:100%}.worldsw button{flex:1;justify-content:center;padding:12px 10px;font-size:14px}
     .detrow{grid-template-columns:1fr auto;row-gap:6px}.detrow .tr{grid-column:1/-1;order:3}.detrow .pc{display:none}
@@ -528,6 +549,7 @@
       <span class="finnote">Ago/2026 com números reais (Conta Azul / planilha). Demais meses: demonstração.</span>
     </div>
     <div class="kpis" id="finKpis"></div>
+    <div class="finstats" id="finStats"></div>
     <div class="grid2">
       <div class="panel pad">
         <div class="phd"><h2>DRE resumida</h2><small id="finDreSub"></small></div>
@@ -544,8 +566,13 @@
       <div id="finDetalhe"></div>
     </div>
     <div class="panel pad" style="margin-top:16px">
-      <div class="phd"><h2>Evolução do faturamento</h2><small>últimos meses</small></div>
-      <div class="trend" id="finTrend"></div>
+      <div class="phd"><h2>Fluxo de caixa — entradas × saídas</h2><small>últimos meses · lucro abaixo de cada mês</small></div>
+      <div class="cflegend">
+        <div><span class="sw" style="background:var(--violet)"></span>Faturamento</div>
+        <div><span class="sw" style="background:var(--rose)"></span>Despesas</div>
+        <div><span class="sw" style="background:var(--emerald)"></span>Lucro do mês</div>
+      </div>
+      <div class="cfchart" id="finCash"></div>
     </div>
   </section>
 
@@ -1125,34 +1152,41 @@ function finDreRows(v,d){
   if(v.invest)h+=row('= Resultado Final',d.resultadoFinal,'tot '+(d.resultadoFinal>=0?'pos':'neg'));
   return h;
 }
-function renderFinTrend(comp){
+function renderFinCash(comp){
   const base=FIN_BASE[comp];const keys=Object.keys(FIN_MONTHS);
-  const data=keys.map(ym=>({ym,fat:scaleFin(base,FIN_MONTHS[ym]).fat}));
-  const max=Math.max(1,...data.map(x=>x.fat));
-  document.getElementById('finTrend').innerHTML=data.map(x=>`<div class="tbar ${x.ym===curYM?'cur':''}">
-    <div class="tv nums">${compact(x.fat)}</div><div class="tb" data-h="${x.fat/max*100}"></div>
-    <div class="tl">${MONTHS[(+x.ym.slice(5))-1]}</div></div>`).join('');
-  requestAnimationFrame(()=>{document.querySelectorAll('#finTrend .tb').forEach(b=>b.style.height=(b.dataset.h||0)+'%');});
+  const data=keys.map(ym=>{const v=scaleFin(base,FIN_MONTHS[ym]);const d=finCompute(v);return {ym,fat:v.fat,desp:d.despesas,lucro:d.resultadoOp};});
+  const max=Math.max(1,...data.flatMap(x=>[x.fat,x.desp]));
+  document.getElementById('finCash').innerHTML=data.map(x=>`<div class="cfcol ${x.ym===curYM?'cur':''}">
+    <div class="cfbars"><div class="cfb fat" data-h="${x.fat/max*100}"></div><div class="cfb desp" data-h="${x.desp/max*100}"></div></div>
+    <div class="cflabel">${MONTHS[(+x.ym.slice(5))-1]}</div>
+    <div class="cflucro ${x.lucro>=0?'pos':'neg'}">${x.lucro<0?'−':''}${compact(Math.abs(x.lucro))}</div></div>`).join('');
+  requestAnimationFrame(()=>{document.querySelectorAll('#finCash .cfb').forEach(b=>b.style.height=(b.dataset.h||0)+'%');});
 }
 function finRender(){
   const comp=finCompany,base=FIN_BASE[comp],f=FIN_MONTHS[curYM];
   document.querySelectorAll('#finCompany button').forEach(b=>b.classList.toggle('on',b.dataset.c===comp));
   const K=document.getElementById('finKpis'),DRE=document.getElementById('finDre'),DI=document.getElementById('finDiag'),
-    GR=document.getElementById('finGrupos'),DET=document.getElementById('finDetalhe'),TR=document.getElementById('finTrend');
+    GR=document.getElementById('finGrupos'),DET=document.getElementById('finDetalhe'),ST=document.getElementById('finStats');
   if(f==null){
     K.innerHTML='<div class="empty" style="grid-column:1/-1;padding:40px"><b>Sem dados financeiros neste mês</b>Os dados de exemplo vão de mai a out/2026 — navegue até um desses meses.</div>';
-    DRE.innerHTML='';DI.innerHTML='';GR.innerHTML='';DET.innerHTML='';TR.innerHTML='';
+    DRE.innerHTML='';DI.innerHTML='';GR.innerHTML='';DET.innerHTML='';ST.innerHTML='';document.getElementById('finCash').innerHTML='';
     document.getElementById('finDreSub').textContent='';document.getElementById('finDiagSub').textContent='';return;
   }
   const v=scaleFin(base,f),d=finCompute(v);
   const pk=prevMonthKey(curYM),pf=FIN_MONTHS[pk],vp=pf!=null?scaleFin(base,pf):null,dp=vp?finCompute(vp):null;
   const dl=(c,p)=>(p!=null&&p!==0)?((c-p)/Math.abs(p)*100):null;
+  const margem=v.receitaBruta?d.resultadoOp/v.receitaBruta*100:0;
+  const folego=v.saldo/(d.despesas||1);
   K.innerHTML=
     finCard('var(--violet-2)','Faturado',v.fat,dl(v.fat,vp&&vp.fat),'receita bruta')+
     finCard('var(--emerald)','Recebido',v.rec,dl(v.rec,vp&&vp.rec),v._recReal?'em caixa':'estimado · conectar Hotmart')+
     finCard('var(--rose)','Despesas',d.despesas,dl(d.despesas,dp&&dp.despesas),'gastos operacionais')+
-    finCard(d.resultadoOp>=0?'var(--emerald)':'var(--rose)','Resultado',d.resultadoOp,dl(d.resultadoOp,dp&&dp.resultadoOp),'operacional do mês')+
+    finCard(d.resultadoOp>=0?'var(--emerald)':'var(--rose)','Resultado',d.resultadoOp,dl(d.resultadoOp,dp&&dp.resultadoOp),'operacional · margem '+margem.toFixed(0)+'%')+
     finCard('var(--gold)','Saldo de caixa',v.saldo,null,v._recReal?'hoje':'estimado');
+  ST.innerHTML=
+    `<div class="fstat"><span class="k">Margem operacional</span><span class="v nums" style="color:${margem>=20?'var(--emerald)':margem>=0?'var(--gold)':'var(--rose)'}">${margem.toFixed(1)}%</span></div>
+     <div class="fstat"><span class="k">Fôlego de caixa</span><span class="v nums">${folego.toFixed(1)} meses</span></div>
+     <div class="fstat"><span class="k">Resultado final (c/ não recorrentes)</span><span class="v nums" style="color:${d.resultadoFinal>=0?'var(--emerald)':'var(--rose)'}">${d.resultadoFinal<0?'−':''}${compact(Math.abs(d.resultadoFinal))}</span></div>`;
   DRE.innerHTML=finDreRows(v,d);
   document.getElementById('finDreSub').textContent=MONTHS_FULL[(+curYM.slice(5))-1]+' · % sobre receita';
   const gastoPc=Math.round(d.despesas/(v.receitaBruta||1)*100), lucroPc=Math.round(d.resultadoOp/(v.receitaBruta||1)*100);
@@ -1168,7 +1202,7 @@ function finRender(){
     <div class="tr"><i data-w="${val/dmax*100}"></i></div><div class="amt nums">${brl0.format(val)}</div>
     <div class="pc">${(val/(v.receitaBruta||1)*100).toFixed(1)}%</div></div>`).join('')
     + (v.extra&&v.extra.length?`<div class="finextra"><div class="h">⚠️ Não recorrentes (fora da operação)</div>${v.extra.map(([nm,val])=>`<div class="er">${esc(nm)}<b class="nums">${brl0.format(val)}</b></div>`).join('')}</div>`:'');
-  renderFinTrend(comp);
+  renderFinCash(comp);
   requestAnimationFrame(()=>{document.querySelectorAll('#finGrupos .bartrack i,#finDetalhe .tr i').forEach(i=>i.style.width=(i.dataset.w||0)+'%');});
 }
 function applyWorld(){
