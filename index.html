@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Grupo Virax — High Ticket</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#08060F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Virax HT">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
 
@@ -1092,8 +1099,36 @@ function checkNotify(){
     try{localStorage.setItem('vx_notified',JSON.stringify(seen))}catch(e){}
   }
 }
-async function subscribePush(){ return; } /* web push (background) — configurado adiante */
+/* ===== web push em BACKGROUND (notifica com o site fechado) ===== */
+const VAPID_PUBLIC='BFRPDOZ_i4CslQ7yd56VjcvLq9TvX688R-G_ls4PtFnTtnkjakzxvzRwRObx_IpOBEzIUjCoPFN9lo1QlqLlKoo';
+function pushSupported(){return 'serviceWorker' in navigator && 'PushManager' in window;}
+function b64ToU8(b64){const pad='='.repeat((4-b64.length%4)%4);const s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(s);const out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
+let _swReg=null;
+async function registerSW(){ if(!('serviceWorker' in navigator))return null; if(_swReg)return _swReg;
+  try{_swReg=await navigator.serviceWorker.register('sw.js',{scope:'./'});return _swReg;}catch(e){return null;} }
+async function subscribePush(){
+  if(!pushSupported()){return;}
+  const reg=await registerSW(); if(!reg)return;
+  try{await navigator.serviceWorker.ready;}catch(e){}
+  let sub=null;
+  try{sub=await reg.pushManager.getSubscription();}catch(e){}
+  if(!sub){
+    try{sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(VAPID_PUBLIC)});}
+    catch(e){return;}
+  }
+  // grava/atualiza a inscrição deste aparelho no Supabase
+  try{
+    const j=sub.toJSON(); if(!j||!j.keys)return;
+    const row={endpoint:sub.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,
+      user_email:(session&&session.user&&session.user.email)||null,
+      user_agent:(navigator.userAgent||'').slice(0,180),last_seen:new Date().toISOString()};
+    if(SB)await SB.from('push_subscriptions').upsert(row,{onConflict:'endpoint'});
+    try{localStorage.setItem('vx_push','1')}catch(e){}
+  }catch(e){}
+}
 document.getElementById('bellBtn').onclick=()=>openDrawer('alertas');
+// registra o SW no carregamento (necessário p/ PWA e p/ push); re-inscreve se já estava ativo
+if('serviceWorker' in navigator){ registerSW().then(()=>{ try{ if(localStorage.getItem('vx_push')==='1')subscribePush(); }catch(e){} }); }
 
 /* ========== mutations ========== */
 async function payParcela(id,pi){const arr=sales();const s=arr.find(x=>x.id===id);if(!s)return;
