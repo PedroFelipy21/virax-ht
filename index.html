@@ -308,6 +308,13 @@
   @media(max-width:1080px){.kpis{grid-template-columns:1fr 1fr 1fr}.kpi.hero{grid-column:span 3}.fechamento{grid-template-columns:1fr}}
   @media(max-width:860px){.grid2{grid-template-columns:1fr}.rsummary{grid-template-columns:1fr}}
   @media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}.kpi.hero{grid-column:span 2}.row2{grid-template-columns:1fr}.monthsel .ml{min-width:116px}.cols{gap:8px}}
+  /* ===== cobranças / notificações ===== */
+  .bellbadge{position:absolute;top:-6px;right:-6px;background:var(--rose);color:#fff;font-size:10px;font-weight:800;border-radius:999px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px;box-shadow:0 0 0 2px var(--bg)}
+  .alertsec .ah{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:16px 0 9px;display:flex;align-items:center;gap:8px}
+  .alertsec .ah.ov{color:var(--rose)} .alertsec .ah.today{color:var(--gold)}
+  .notifcta{background:var(--surface-2);border:1px solid var(--border-2);border-radius:13px;padding:14px;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--muted);line-height:1.5}
+  .notifcta button{margin-top:11px;width:100%;justify-content:center}
+  .notifcta.on{color:var(--emerald);border-color:rgba(46,230,166,.3)}
   /* ===== troca de mundo HT / Financeiro ===== */
   .worldsw{display:flex;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px;width:fit-content;max-width:100%;margin:2px 0 20px}
   .worldsw button{border:0;background:transparent;color:var(--muted);font-weight:800;font-size:15px;padding:12px 26px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:.16s}
@@ -432,6 +439,10 @@
         <div class="ml nums" id="mLabel">—<small id="mTag">competência</small></div>
         <button id="nextM" aria-label="Próximo mês">›</button>
       </div>
+      <button class="btn" id="bellBtn" title="Cobranças" style="position:relative;padding:11px 13px">
+        <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="bellbadge" id="bellBadge" hidden></span>
+      </button>
       <button class="btn" id="authBtn" hidden>Entrar (gestão)</button>
       <button class="btn primary" id="addBtn">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -777,7 +788,7 @@ function render(){
   document.getElementById('mLabel').childNodes[0].nodeValue=monthLabelFull(curYM);
   document.getElementById('demoBar').classList.toggle('show',mode==='demo');
   document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
-  applyWorld();
+  applyWorld(); renderBell();
   if(world==='fin'){ finRender();
     document.getElementById('foot').textContent = mode==='demo'
       ? 'Financeiro — Ago/2026 com dados reais (Conta Azul / planilha); demais meses demonstração.'
@@ -1024,7 +1035,7 @@ function openDrawer(type){
       (items.length?items.map(r=>`<div class="dsale"><div><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · vence ${pdate(r.vencimento).toLocaleDateString('pt-BR')}</small></div><div class="m nums">${brl0.format(r.valor)}</div></div>`).join('')
         :'<div class="empty" style="padding:24px"><b>Nada vence neste mês</b>Veja o cronograma completo.</div>');
     setTimeout(()=>{const g=document.getElementById('goReceb');if(g)g.onclick=()=>{closeDrawer();setTab('receb');};},0);
-  }
+  }else if(type==='alertas'){ renderAlertas(T,S,B); }
   scrim.classList.add('show');dr.classList.add('show');dr.setAttribute('aria-hidden','false');
 }
 function saleRows(ms,kind){
@@ -1035,6 +1046,54 @@ function saleRows(ms,kind){
       <div><div class="m nums">${brl0.format(right)}</div>${kind==='col'?`<div class="ms" style="color:var(--faint)">de ${compact(s.valor)}</div>`:(col<s.valor?`<div class="ms" style="color:var(--gold)">${compact(s.valor-col)} a receber</div>`:`<div class="ms" style="color:var(--emerald)">quitado</div>`)}</div></div>`;}).join('');
 }
 function closeDrawer(){document.getElementById('scrim').classList.remove('show');const dr=document.getElementById('drawer');dr.classList.remove('show');dr.setAttribute('aria-hidden','true');}
+
+/* ===== cobranças / notificações ===== */
+function dueList(){const t=todayISO();return allReceivables().filter(r=>r.vencimento&&r.vencimento<=t);}
+function renderBell(){const b=document.getElementById('bellBadge');if(!b)return;const n=dueList().length;if(n>0){b.hidden=false;b.textContent=n>99?'99+':n;}else b.hidden=true;}
+function renderAlertas(T,S,B){
+  const tISO=todayISO(); const all=allReceivables();
+  const over=all.filter(r=>r.vencimento&&r.vencimento<tISO);
+  const today=all.filter(r=>r.vencimento===tISO);
+  const se=new Date(); se.setDate(se.getDate()+7); const soonISO=se.toISOString().slice(0,10);
+  const soon=all.filter(r=>r.vencimento&&r.vencimento>tISO&&r.vencimento<=soonISO);
+  const totalDue=[...over,...today].reduce((s,r)=>s+r.valor,0);
+  T.textContent='Cobranças'; S.textContent=(over.length+today.length)+' para cobrar agora · '+compact(totalDue);
+  const cta = notifOn()
+    ? '<div class="notifcta on">🔔 Notificações ativadas neste aparelho — você será avisado quando a cobrança vencer.</div>'
+    : '<div class="notifcta">Receba um aviso no computador/celular quando uma cobrança vencer.<button class="btn primary" id="enableNotifBtn">🔔 Ativar notificações</button></div>';
+  const item=(r,ov)=>{const dd=r.vencimento?pdate(r.vencimento):null;
+    return `<div class="recitem ${ov?'ov':''}"><div class="recdate"><div class="d nums">${dd?String(dd.getDate()).padStart(2,'0'):'—'}</div><div class="mo">${dd?MONTHS[dd.getMonth()]:''}</div></div>
+      <div class="recwho"><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · ${esc(r.sale.origem)}</small></div>
+      <div class="recpv nums">${brl0.format(r.valor)}</div>
+      <button class="paybtn" data-s="${r.sale.id}" data-pi="${r.pi}">Marcar pago</button></div>`;};
+  const sec=(title,arr,cls)=>arr.length?`<div class="alertsec"><div class="ah ${cls||''}">${title} · ${compact(arr.reduce((s,r)=>s+r.valor,0))}</div>${arr.map(r=>item(r,cls==='ov')).join('')}</div>`:'';
+  B.innerHTML=cta+sec('Vencidas',over,'ov')+sec('Vencem hoje',today,'today')+sec('Próximos 7 dias',soon,'')
+    +((over.length+today.length+soon.length)===0?'<div class="empty" style="padding:30px"><b>Nada a cobrar agora</b>Sem parcelas vencidas ou vencendo.</div>':'');
+  const en=document.getElementById('enableNotifBtn'); if(en)en.onclick=enableNotif;
+  B.querySelectorAll('.paybtn').forEach(b=>b.onclick=()=>{payParcela(b.dataset.s,+b.dataset.pi);setTimeout(()=>renderAlertas(T,S,B),400);});
+}
+function notifSupported(){return 'Notification' in window;}
+function notifOn(){try{return localStorage.getItem('vx_notif')==='1'&&notifSupported()&&Notification.permission==='granted'}catch(e){return false}}
+async function enableNotif(){
+  if(!notifSupported()){flash('Este navegador não suporta notificações.');return;}
+  let p=Notification.permission; if(p!=='granted')p=await Notification.requestPermission();
+  if(p==='granted'){try{localStorage.setItem('vx_notif','1')}catch(e){} try{await subscribePush();}catch(e){} flash('Notificações ativadas!'); checkNotify();
+    const dr=document.getElementById('drawer'); if(dr.classList.contains('show'))openDrawer('alertas');
+  } else flash('Permissão negada — ative nas configurações do site no navegador.');
+}
+function checkNotify(){
+  if(!notifOn())return; const tISO=todayISO(); let seen={}; try{seen=JSON.parse(localStorage.getItem('vx_notified')||'{}')}catch(e){}
+  let changed=false;
+  dueList().forEach(r=>{const key=r.id+'|'+tISO; if(!seen[key]){
+    try{new Notification('Cobrança · Grupo Virax',{body:(r.sale.cliente||'Cliente')+' — '+brl0.format(r.valor)+(r.vencimento<tISO?' (vencida)':' — vence hoje'),tag:r.id});}catch(e){}
+    seen[key]=Date.now(); changed=true; }});
+  if(changed){ // limpa chaves antigas (>45 dias)
+    const cut=Date.now()-45*864e5; Object.keys(seen).forEach(k=>{if(seen[k]<cut)delete seen[k];});
+    try{localStorage.setItem('vx_notified',JSON.stringify(seen))}catch(e){}
+  }
+}
+async function subscribePush(){ return; } /* web push (background) — configurado adiante */
+document.getElementById('bellBtn').onclick=()=>openDrawer('alertas');
 
 /* ========== mutations ========== */
 async function payParcela(id,pi){const arr=sales();const s=arr.find(x=>x.id===id);if(!s)return;
@@ -1326,7 +1385,7 @@ dreScrim.addEventListener('click',e=>{if(e.target===dreScrim)dreScrim.classList.
 
 /* ========== boot (Supabase) ========== */
 setTab(tab);
-async function reloadSales(){if(!SB)return;const {data,error}=await SB.from('sales').select('*');if(!error){realSales=(data||[]);if(mode==='real')render();}}
+async function reloadSales(){if(!SB)return;const {data,error}=await SB.from('sales').select('*');if(!error){realSales=(data||[]);if(mode==='real')render();setTimeout(checkNotify,600);}}
 async function reloadConfig(){if(!SB)return;const {data}=await SB.from('config').select('metas').eq('id','app').maybeSingle();realMeta=(data&&data.metas)||{};if(mode==='real')render();}
 async function reloadFin(){if(!SB)return;const {data}=await SB.from('financeiro').select('*');realFin={};(data||[]).forEach(r=>realFin[r.mes]=finNorm(r));if(world==='fin')render();}
 function updateAuth(){canWrite=!!session;const b=document.getElementById('authBtn');
@@ -1369,6 +1428,7 @@ function initSupabase(){
   render();
 }
 initSupabase();
+setInterval(checkNotify, 1800000); // re-checa cobranças a cada 30 min enquanto aberto
 </script>
 </body>
 </html>
