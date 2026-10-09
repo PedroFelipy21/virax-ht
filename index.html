@@ -1084,7 +1084,7 @@ function notifOn(){try{return localStorage.getItem('vx_notif')==='1'&&notifSuppo
 async function enableNotif(){
   if(!notifSupported()){flash('Este navegador não suporta notificações.');return;}
   let p=Notification.permission; if(p!=='granted')p=await Notification.requestPermission();
-  if(p==='granted'){try{localStorage.setItem('vx_notif','1')}catch(e){} try{await subscribePush();}catch(e){} flash('Notificações ativadas!'); checkNotify();
+  if(p==='granted'){try{localStorage.setItem('vx_notif','1')}catch(e){} try{await subscribePush(true);}catch(e){} flash('Notificações ativadas neste aparelho!'); checkNotify();
     const dr=document.getElementById('drawer'); if(dr.classList.contains('show'))openDrawer('alertas');
   } else flash('Permissão negada — ative nas configurações do site no navegador.');
 }
@@ -1106,7 +1106,7 @@ function b64ToU8(b64){const pad='='.repeat((4-b64.length%4)%4);const s=(b64+pad)
 let _swReg=null;
 async function registerSW(){ if(!('serviceWorker' in navigator))return null; if(_swReg)return _swReg;
   try{_swReg=await navigator.serviceWorker.register('sw.js',{scope:'./'});return _swReg;}catch(e){return null;} }
-async function subscribePush(){
+async function subscribePush(sendTest){
   if(!pushSupported()){return;}
   const reg=await registerSW(); if(!reg)return;
   try{await navigator.serviceWorker.ready;}catch(e){}
@@ -1124,6 +1124,12 @@ async function subscribePush(){
       user_agent:(navigator.userAgent||'').slice(0,180),last_seen:new Date().toISOString()};
     if(SB)await SB.from('push_subscriptions').upsert(row,{onConflict:'endpoint'});
     try{localStorage.setItem('vx_push','1')}catch(e){}
+    // confirmação imediata em background só para este aparelho
+    if(sendTest){try{
+      await fetch(window.VX_SUPABASE_URL+'/functions/v1/notify-cobrancas',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+window.VX_SUPABASE_ANON_KEY},
+        body:JSON.stringify({test:true,endpoint:sub.endpoint})});
+    }catch(e){}}
   }catch(e){}
 }
 document.getElementById('bellBtn').onclick=()=>openDrawer('alertas');
