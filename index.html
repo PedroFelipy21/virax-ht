@@ -425,6 +425,53 @@
     .dsale{grid-template-columns:1fr auto}
   }
   @media(prefers-reduced-motion:reduce){.aurora span{animation:none}*{transition:none!important}}
+
+  /* ===== Modo TV (tela cheia escritório) ===== */
+  #tvScrim{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;
+    background:radial-gradient(1200px 700px at 80% -10%,rgba(123,74,226,.22),transparent 60%),radial-gradient(900px 600px at -10% 110%,rgba(88,207,240,.10),transparent 55%),var(--bg);
+    padding:clamp(20px,3.2vw,52px);gap:clamp(16px,2.4vh,34px);overflow:hidden}
+  #tvScrim.show{display:flex}
+  .tvtop{display:flex;align-items:center;gap:clamp(14px,1.6vw,26px)}
+  .tvtop .logo{width:clamp(48px,4.2vw,76px);height:clamp(48px,4.2vw,76px);border-radius:16px}
+  .tvtop .tvname{font-family:var(--ff-d);font-weight:800;font-size:clamp(20px,2vw,36px);letter-spacing:.01em;line-height:1}
+  .tvtop .tvsub{color:var(--muted);font-weight:700;font-size:clamp(10px,.82vw,15px);letter-spacing:.26em;text-transform:uppercase;margin-top:6px}
+  .tvtop .tvmonth{margin-left:auto;text-align:right}
+  .tvtop .tvmonth .mm{font-family:var(--ff-d);font-weight:800;font-size:clamp(20px,1.9vw,34px);line-height:1;text-transform:capitalize}
+  .tvtop .tvmonth .cc{color:var(--violet-2);font-weight:700;font-size:clamp(12px,1vw,18px);margin-top:6px;font-variant-numeric:tabular-nums}
+  .tvclose{flex:none;margin-left:clamp(10px,1vw,18px);width:clamp(42px,3vw,56px);height:clamp(42px,3vw,56px);border-radius:14px;background:var(--surface-2);border:1px solid var(--border-2);color:var(--text);cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center}
+  .tvclose:hover{background:var(--surface-3)}
+  .tvkpis{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr 1fr;gap:clamp(12px,1.2vw,22px)}
+  .tvk{position:relative;background:var(--glass);border:1px solid var(--border);border-radius:clamp(16px,1.3vw,24px);padding:clamp(16px,1.7vw,32px);display:flex;flex-direction:column;justify-content:center;gap:clamp(8px,.8vh,14px);overflow:hidden}
+  .tvk.hero{border-color:var(--border-3);background:linear-gradient(165deg,rgba(123,74,226,.28),rgba(18,13,36,.6))}
+  .tvk .cap{display:flex;align-items:center;gap:10px;color:var(--muted);font-weight:800;font-size:clamp(11px,.85vw,16px);letter-spacing:.1em;text-transform:uppercase}
+  .tvk .cap .dot{width:11px;height:11px;border-radius:50%}
+  .tvk .val{font-family:var(--ff-d);font-weight:800;line-height:.95;font-size:clamp(30px,3.4vw,66px);letter-spacing:-.01em}
+  .tvk.hero .val{font-size:clamp(38px,4.6vw,88px)}
+  .tvk .sub{color:var(--faint);font-weight:600;font-size:clamp(11px,.9vw,17px)}
+  .tvk .tvspark{height:6px;border-radius:4px;background:var(--surface-3);overflow:hidden;margin-top:4px}
+  .tvk .tvspark i{display:block;height:100%;border-radius:4px}
+  .tvbottom{display:grid;grid-template-columns:1.5fr 1fr;gap:clamp(12px,1.2vw,22px);flex:1;min-height:0}
+  .tvpanel{background:var(--glass);border:1px solid var(--border);border-radius:clamp(16px,1.3vw,24px);padding:clamp(16px,1.7vw,32px);display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,1.6vh,22px)}
+  .tvpanel .ph{display:flex;align-items:baseline;justify-content:space-between}
+  .tvpanel .ph h3{font-family:var(--ff-d);font-weight:800;font-size:clamp(16px,1.4vw,26px)}
+  .tvpanel .ph small{color:var(--faint);font-weight:600;font-size:clamp(11px,.85vw,15px)}
+  .tvfbar{height:clamp(22px,2.2vh,34px);border-radius:12px;background:var(--surface-3);display:flex;overflow:hidden}
+  .tvfbar i{display:block;height:100%}
+  .tvfleg{display:flex;flex-wrap:wrap;gap:clamp(14px,1.4vw,28px)}
+  .tvfleg div{display:flex;align-items:center;gap:9px;font-weight:700;font-size:clamp(13px,1vw,19px)}
+  .tvfleg .sw{width:14px;height:14px;border-radius:4px}
+  .tvfleg b{font-family:var(--ff-d);margin-left:4px}
+  .tvmrow{display:flex;align-items:baseline;justify-content:space-between}
+  .tvmrow .k{color:var(--muted);font-weight:800;font-size:clamp(12px,.95vw,17px);letter-spacing:.08em;text-transform:uppercase}
+  .tvmrow .pct{font-family:var(--ff-d);font-weight:800;font-size:clamp(34px,3.4vw,62px)}
+  .tvmtrack{height:clamp(18px,1.8vh,28px);border-radius:12px;background:var(--surface-3);overflow:hidden}
+  .tvmtrack i{display:block;height:100%;border-radius:12px}
+  .tvmfoot{color:var(--faint);font-weight:700;font-size:clamp(13px,1vw,19px);font-variant-numeric:tabular-nums}
+  @media(max-aspect-ratio:13/10){
+    .tvkpis{grid-template-columns:1fr 1fr 1fr}
+    .tvbottom{grid-template-columns:1fr}
+  }
+  @media(max-width:760px){.tvkpis{grid-template-columns:1fr 1fr}.tvk.hero{grid-column:span 2}}
 </style>
 </head>
 <body>
@@ -449,6 +496,9 @@
       <button class="btn" id="bellBtn" title="Cobranças" style="position:relative;padding:11px 13px">
         <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span class="bellbadge" id="bellBadge" hidden></span>
+      </button>
+      <button class="btn" id="tvBtn" title="Modo TV — tela cheia para o escritório" style="padding:11px 13px">
+        <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><rect x="2" y="4" width="20" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
       <button class="btn" id="authBtn" hidden>Entrar (gestão)</button>
       <button class="btn primary" id="addBtn">
@@ -641,7 +691,7 @@
         <div class="lbl">Produto</div>
         <div class="chips" id="prodChips"></div>
         <div class="row2" id="customWrap" hidden>
-          <div class="field"><label for="f_cname">Nome do produto</label><input id="f_cname" placeholder="Ex.: Consultoria VIP"></div>
+          <div class="field" id="cnameField"><label for="f_cname">Nome do produto</label><input id="f_cname" placeholder="Ex.: Consultoria VIP"></div>
           <div class="field"><label for="f_cval">Valor total (R$)</label><input id="f_cval" class="nums" type="number" min="0" step="100" placeholder="0"></div>
         </div>
       </div>
@@ -677,6 +727,35 @@
   </div>
 </div>
 
+<!-- Modo TV -->
+<div id="tvScrim" aria-hidden="true">
+  <div class="tvtop">
+    <img class="logo" id="tvLogo" alt="">
+    <div>
+      <div class="tvname">Grupo Virax</div>
+      <div class="tvsub">High Ticket · Painel de Vendas</div>
+    </div>
+    <div class="tvmonth">
+      <div class="mm" id="tvMonth">—</div>
+      <div class="cc" id="tvClock">--:--</div>
+    </div>
+    <button class="tvclose" id="tvClose" aria-label="Sair do modo TV">✕</button>
+  </div>
+  <div class="tvkpis" id="tvKpis"></div>
+  <div class="tvbottom">
+    <div class="tvpanel">
+      <div class="ph"><h3>Fechamento do mês</h3><small id="tvFechSub"></small></div>
+      <div class="tvfbar" id="tvFbar"></div>
+      <div class="tvfleg" id="tvFleg"></div>
+    </div>
+    <div class="tvpanel">
+      <div class="tvmrow"><span class="k">Meta do mês <span style="color:var(--violet-2)">(Comercial)</span></span><span class="pct nums" id="tvMetaPct">—</span></div>
+      <div class="tvmtrack"><i id="tvMetaFill"></i></div>
+      <div class="tvmfoot" id="tvMetaFoot"></div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
@@ -684,9 +763,8 @@
 const ORIGINS=['Comercial','Clara','João','Outros'];
 const OC={'Comercial':'#A368FF','Clara':'#F56EC2','João':'#58CFF0','Outros':'#7E759E'};
 const PRODUCTS=[
-  {label:'Mentoria 15k',cat:'Mentoria',valor:15000},
-  {label:'Mentoria 20k',cat:'Mentoria',valor:20000},
-  {label:'Mentoria 25k',cat:'Mentoria',valor:25000},
+  {label:'Mentoria Virax',cat:'Mentoria Virax',valor:15000},
+  {label:'Mentoria Individual',cat:'Mentoria Individual',valor:25000},
   {label:'Implementação 40k',cat:'Implementação',valor:40000},
   {label:'Implementação 50k',cat:'Implementação',valor:50000},
 ];
@@ -812,7 +890,51 @@ function render(){
   document.getElementById('foot').textContent = mode==='demo'
     ? 'Modo demonstração — dados de exemplo, nada é salvo.'
     : (canWrite?'Dados reais · sincronizado entre você, Clara e João':'Somente leitura · entre com uma conta de gestão para lançar');
+  if(tvOpen)renderTV();
 }
+
+/* ========== Modo TV (tela cheia escritório) ========== */
+let tvOpen=false,tvClockT=null;
+function tvTick(){const c=document.getElementById('tvClock');if(c)c.textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function renderTV(){
+  const m=monthMetrics(curYM);const due=dueInMonth(curYM);const comFat=comercialFat(m);
+  const meta=metaFor(curYM);const pct=meta?Math.min(100,comFat/meta*100):0;
+  const mes=MONTHS_FULL[(+curYM.slice(5))-1];
+  document.getElementById('tvMonth').textContent=mes+' '+curYM.slice(0,4);
+  const pc=m.fat?m.col/m.fat*100:0;
+  const card=(cls,color,cap,valStr,sub,sparkColor,sparkW)=>`<div class="tvk ${cls}">
+    <div class="cap"><span class="dot" style="background:${color}"></span>${cap}</div>
+    <div class="val">${valStr}</div><div class="sub">${sub}</div>
+    ${sparkColor?`<div class="tvspark"><i style="width:${Math.max(3,sparkW)}%;background:${sparkColor}"></i></div>`:''}</div>`;
+  document.getElementById('tvKpis').innerHTML=
+    card('hero','var(--violet-2)','Faturado (HT)',compact(m.fat),brl2.format(m.fat),'var(--violet-2)',100)+
+    card('','var(--emerald)','Caixa coletado',compact(m.col),(m.fat?Math.round(m.col/m.fat*100)+'% das vendas do mês':'—'),'var(--emerald)',pc)+
+    card('','var(--gold)','A receber no mês',compact(due),'vencem em '+mes,'var(--gold)',Math.min(100,m.fat?due/m.fat*100:0))+
+    card('','var(--text)','Contratos',String(m.n),'no mês',null,0)+
+    card('','var(--text)','Ticket médio',compact(m.ticket),'por contrato',null,0);
+  document.getElementById('tvFechSub').textContent='das vendas de '+mes;
+  const fb=document.getElementById('tvFbar');
+  if(m.fat>0)fb.innerHTML=`<i style="width:${m.col/m.fat*100}%;background:linear-gradient(90deg,var(--emerald),var(--emerald-2))"></i><i style="width:${m.rec/m.fat*100}%;background:linear-gradient(90deg,var(--gold),var(--gold-2))"></i>`+(m.perda?`<i style="width:${m.perda/m.fat*100}%;background:linear-gradient(90deg,var(--rose),#ff93a9)"></i>`:'');
+  else fb.innerHTML='<i style="width:100%;background:var(--surface-3)"></i>';
+  document.getElementById('tvFleg').innerHTML=`<div><span class="sw" style="background:var(--violet)"></span>Faturado <b class="nums">${compact(m.fat)}</b></div><div><span class="sw" style="background:var(--emerald)"></span>Em caixa <b class="nums">${compact(m.col)}</b></div><div><span class="sw" style="background:var(--gold)"></span>Falta receber <b class="nums">${compact(m.rec)}</b></div>`+(m.perda?`<div><span class="sw" style="background:var(--rose)"></span>Perdas/calote <b class="nums">${compact(m.perda)}</b></div>`:'');
+  const mp=document.getElementById('tvMetaPct');mp.textContent=meta?Math.round(pct)+'%':'—';mp.style.color=pct>=100?'var(--emerald)':'var(--violet-2)';
+  const mf=document.getElementById('tvMetaFill');mf.style.width=pct+'%';mf.style.background=pct>=100?'linear-gradient(90deg,var(--emerald),var(--emerald-2))':'linear-gradient(90deg,var(--violet),var(--violet-2))';
+  document.getElementById('tvMetaFoot').textContent=meta?compact(comFat)+' de '+compact(meta):'meta não definida';
+}
+function openTV(){
+  tvOpen=true;
+  const lg=document.querySelector('header .logo');if(lg)document.getElementById('tvLogo').src=lg.src;
+  renderTV();tvTick();clearInterval(tvClockT);tvClockT=setInterval(tvTick,1000);
+  const s=document.getElementById('tvScrim');s.classList.add('show');s.setAttribute('aria-hidden','false');
+  try{(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen||function(){}).call(document.documentElement);}catch(e){}
+}
+function closeTV(){
+  tvOpen=false;clearInterval(tvClockT);
+  const s=document.getElementById('tvScrim');s.classList.remove('show');s.setAttribute('aria-hidden','true');
+  try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}
+}
+document.getElementById('tvBtn').onclick=openTV;
+document.getElementById('tvClose').onclick=closeTV;
 
 /* ========== RESUMO ========== */
 function kpiEl(cls,color,cap,id,clickable){
@@ -864,12 +986,14 @@ function renderResumo(){
   renderDonut(m);
   renderNextRec();
 }
+function comercialFat(m){return (m&&m.orig&&m.orig['Comercial'])||0;}
 function renderMeta(m){
-  const meta=metaFor(curYM);const pct=meta?Math.min(100,m.fat/meta*100):0;
+  const comFat=comercialFat(m);
+  const meta=metaFor(curYM);const pct=meta?Math.min(100,comFat/meta*100):0;
   const box=document.getElementById('metaBox');
-  box.innerHTML=`<div class="metarow"><span class="k">Meta do mês</span><span class="pct nums" style="color:${pct>=100?'var(--emerald)':'var(--violet-2)'}">${meta?Math.round(pct)+'%':'—'}</span></div>
+  box.innerHTML=`<div class="metarow"><span class="k">Meta do mês <span style="color:var(--violet-2)">(Comercial)</span></span><span class="pct nums" style="color:${pct>=100?'var(--emerald)':'var(--violet-2)'}">${meta?Math.round(pct)+'%':'—'}</span></div>
     <div class="mtrack"><i id="metaFill"></i></div>
-    <div class="metafoot"><span class="nums">${meta?compact(m.fat)+' de '+compact(meta):'meta não definida'}</span>
+    <div class="metafoot"><span class="nums">${meta?compact(comFat)+' de '+compact(meta):'meta não definida'}</span>
       <button id="editMeta">${meta?'editar meta':'definir meta'}</button></div>`;
   requestAnimationFrame(()=>{const f=document.getElementById('metaFill');f.style.width=pct+'%';
     f.style.background=pct>=100?'linear-gradient(90deg,var(--emerald),var(--emerald-2))':'linear-gradient(90deg,var(--violet),var(--violet-2))';});
@@ -1147,12 +1271,19 @@ async function delSale(id){if(mode==='demo'){_demo=_demo.filter(s=>s.id!==id);re
 
 /* ========== modal ========== */
 const mscrim=document.getElementById('mscrim');let fTipo='TCV',fOrig='Comercial',fProd=null;
+function syncCustomWrap(){
+  const isCustom=fProd==='custom', isRenov=fProd==='renov';
+  document.getElementById('customWrap').hidden=!(isCustom||isRenov);
+  const nf=document.getElementById('cnameField'); if(nf)nf.hidden=isRenov;
+  if(isRenov)document.getElementById('f_cname').value='Renovação';
+}
 function buildChips(){
   document.getElementById('prodChips').innerHTML=PRODUCTS.map(p=>`<button type="button" class="chip" data-v="${p.valor}" data-l="${p.label}"><span>${p.cat}</span><small>${brl0.format(p.valor)}</small></button>`).join('')
+    +`<button type="button" class="chip" data-v="renov"><span>Renovação</span><small>valor a definir</small></button>`
     +`<button type="button" class="chip" data-v="custom"><span>Outro</span><small>personalizado</small></button>`;
   document.getElementById('origChips').innerHTML=ORIGINS.map(o=>`<button type="button" class="chip oc" data-o="${o}" style="--origin:${OC[o]}">${o}</button>`).join('');
   document.querySelectorAll('#prodChips .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#prodChips .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
-    fProd=c.dataset.v;document.getElementById('customWrap').hidden=(fProd!=='custom');updateSumm();});
+    fProd=c.dataset.v;syncCustomWrap();updateSumm();});
   document.querySelectorAll('#origChips .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#origChips .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');fOrig=c.dataset.o;});
 }
 let editingId=null, editingParcelas=null;
@@ -1172,8 +1303,10 @@ function openModal(sale){
     fTipo=sale.tipo||'TCV';document.querySelectorAll('#f_tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t===fTipo));
     fOrig=ORIGINS.indexOf(sale.origem)>=0?sale.origem:'Outros';document.querySelectorAll('#origChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.o===fOrig));
     const match=PRODUCTS.find(p=>p.label===sale.produto);
-    if(match){fProd=String(match.valor);document.getElementById('customWrap').hidden=true;document.getElementById('f_cname').value='';document.getElementById('f_cval').value='';}
-    else{fProd='custom';document.getElementById('customWrap').hidden=false;document.getElementById('f_cname').value=sale.produto||'';document.getElementById('f_cval').value=sale.valor||'';}
+    if((sale.produto||'').trim()==='Renovação'){fProd='renov';document.getElementById('f_cname').value='Renovação';document.getElementById('f_cval').value=sale.valor||'';}
+    else if(match){fProd=String(match.valor);document.getElementById('f_cname').value='';document.getElementById('f_cval').value='';}
+    else{fProd='custom';document.getElementById('f_cname').value=sale.produto||'';document.getElementById('f_cval').value=sale.valor||'';}
+    syncCustomWrap();
     document.querySelectorAll('#prodChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===fProd));
     (sale.parcelas||[]).forEach(p=>addParcRow(p.valor,p.vencimento));
   }else{
@@ -1189,8 +1322,8 @@ function openModal(sale){
   mscrim.classList.add('show');
 }
 function closeModal(){mscrim.classList.remove('show');}
-function getValor(){return fProd==='custom'?(+document.getElementById('f_cval').value||0):(+fProd||0);}
-function getProd(){return fProd==='custom'?(document.getElementById('f_cname').value.trim()||'Personalizado'):prodLabel(+fProd);}
+function getValor(){return (fProd==='custom'||fProd==='renov')?(+document.getElementById('f_cval').value||0):(+fProd||0);}
+function getProd(){if(fProd==='renov')return 'Renovação';return fProd==='custom'?(document.getElementById('f_cname').value.trim()||'Personalizado'):prodLabel(+fProd);}
 function addParcRow(v,d){const row=document.createElement('div');row.className='parcrow';
   row.innerHTML=`<input type="number" min="0" step="100" class="pv nums" placeholder="Valor R$" value="${v||''}"><input type="date" class="pd" value="${d||''}"><button class="rm" type="button" aria-label="remover">✕</button>`;
   row.querySelector('.rm').onclick=()=>{row.remove();updateSumm();};row.querySelectorAll('input').forEach(i=>i.oninput=updateSumm);
@@ -1246,7 +1379,7 @@ document.getElementById('mSave').onclick=saveSale;
 document.getElementById('addParc').onclick=()=>addParcRow();
 ['f_entrada','f_resid','f_cval'].forEach(id=>document.getElementById(id).oninput=updateSumm);
 document.getElementById('f_tipo').onclick=e=>{const b=e.target.closest('button');if(!b)return;fTipo=b.dataset.t;document.querySelectorAll('#f_tipo button').forEach(x=>x.classList.toggle('on',x===b));};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(mscrim.classList.contains('show'))closeModal();else if(document.getElementById('drawer').classList.contains('show'))closeDrawer();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(tvOpen)closeTV();else if(mscrim.classList.contains('show'))closeModal();else if(document.getElementById('drawer').classList.contains('show'))closeDrawer();}});
 
 /* ========== FINANCEIRO ========== */
 let world=(()=>{try{return localStorage.getItem('vx_world')||'ht'}catch(e){return 'ht'}})();
