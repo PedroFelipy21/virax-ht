@@ -969,7 +969,7 @@ function renderResumo(){
   animNum(document.getElementById('kDue'),due,money);
   animNum(document.getElementById('kN'),m.n,v=>Math.round(v));
   animNum(document.getElementById('kT'),m.ticket,money);
-  document.getElementById('kFatx').textContent=brl2.format(m.fat)+(m.mrr?' · inclui MRR '+money(m.mrr)+'/mês':'');
+  document.getElementById('kFatx').textContent=m.mrr?('inclui MRR '+money(m.mrr)+'/mês'):'faturamento bruto do mês';
   document.getElementById('kColx').textContent=m.fat?Math.round(m.col/m.fat*100)+'% das vendas do mês':'—';
   document.getElementById('kDuex').textContent='vencem em '+MONTHS_FULL[(+curYM.slice(5))-1];
   document.getElementById('kNx').textContent=m.n?'no mês':'—';
@@ -1086,7 +1086,7 @@ function renderReceb(){
         return `<div class="recitem ${ov?'ov':''}">
           <div class="recdate"><div class="d nums">${dd?String(dd.getDate()).padStart(2,'0'):'—'}</div><div class="mo">${dd?MONTHS[dd.getMonth()]:'s/data'}</div></div>
           <div class="recwho"><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · ${esc(r.sale.origem)}</small></div>
-          <div class="recpv nums">${brl0.format(r.valor)}</div>
+          <div class="recpv nums">${money(r.valor)}</div>
           <button class="paybtn" data-s="${r.sale.id}" data-pi="${r.pi}">Marcar pago</button></div>`;}).join('')}</div>`;}).join('');
   host.querySelectorAll('.paybtn').forEach(b=>b.onclick=()=>payParcela(b.dataset.s,+b.dataset.pi));
 }
@@ -1109,7 +1109,7 @@ function renderVendas(){
       <td>${esc(s.produto)}</td>
       <td><span class="pill" style="color:${oc}"><span class="sw" style="background:${oc}"></span>${esc(s.origem)}</span></td>
       <td><span class="pill" style="color:${s.tipo==='MRR'?'var(--cyan)':'var(--muted)'}">${s.tipo||'TCV'}</span></td>
-      <td class="money">${brl0.format(s.valor)}</td>
+      <td class="money">${money(s.valor)}</td>
       <td><span class="stat" style="color:${sc}"><span class="d" style="background:${sc}"></span>${st}</span>
         <div class="nums" style="color:var(--faint);font-size:11px">${money(col)} em caixa</div></td>
       <td style="white-space:nowrap"><button class="editbtn" data-edit="${s.id}" title="Editar">✎</button><button class="trash" data-del="${s.id}" title="Excluir">🗑</button></td></tr>`;}).join('');
@@ -1171,7 +1171,7 @@ function openDrawer(type){
     const due=dueInMonth(curYM);T.textContent='A receber em '+monthName;S.textContent='parcelas que vencem no mês';
     const items=allReceivables().filter(r=>ymOf(r.vencimento)===curYM);
     B.innerHTML=`<div class="dtot nums" style="color:var(--gold-2)">${money(due)}</div><div class="dsub">${items.length} parcela(s) neste mês · <a id="goReceb" style="color:var(--violet-2);cursor:pointer;text-decoration:underline dotted">ver cronograma completo</a></div>`+
-      (items.length?items.map(r=>`<div class="dsale"><div><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · vence ${pdate(r.vencimento).toLocaleDateString('pt-BR')}</small></div><div class="m nums">${brl0.format(r.valor)}</div></div>`).join('')
+      (items.length?items.map(r=>`<div class="dsale"><div><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · vence ${pdate(r.vencimento).toLocaleDateString('pt-BR')}</small></div><div class="m nums">${money(r.valor)}</div></div>`).join('')
         :'<div class="empty" style="padding:24px"><b>Nada vence neste mês</b>Veja o cronograma completo.</div>');
     setTimeout(()=>{const g=document.getElementById('goReceb');if(g)g.onclick=()=>{closeDrawer();setTab('receb');};},0);
   }else if(type==='alertas'){ renderAlertas(T,S,B); }
@@ -1182,7 +1182,7 @@ function saleRows(ms,kind){
   return [...ms].sort((a,b)=>b.data.localeCompare(a.data)).map(s=>{const col=collectedOf(s);
     const right=kind==='col'?col:s.valor;const oc=OC[s.origem]||'#A368FF';
     return `<div class="dsale"><div><b>${esc(s.cliente||'—')}</b><small>${esc(s.produto)} · <span style="color:${oc}">${esc(s.origem)}</span></small></div>
-      <div><div class="m nums">${brl0.format(right)}</div>${kind==='col'?`<div class="ms" style="color:var(--faint)">de ${money(s.valor)}</div>`:(col<s.valor?`<div class="ms" style="color:var(--gold)">${money(s.valor-col)} a receber</div>`:`<div class="ms" style="color:var(--emerald)">quitado</div>`)}</div></div>`;}).join('');
+      <div><div class="m nums">${money(right)}</div>${kind==='col'?`<div class="ms" style="color:var(--faint)">de ${money(s.valor)}</div>`:(col<s.valor?`<div class="ms" style="color:var(--gold)">${money(s.valor-col)} a receber</div>`:`<div class="ms" style="color:var(--emerald)">quitado</div>`)}</div></div>`;}).join('');
 }
 function closeDrawer(){document.getElementById('scrim').classList.remove('show');const dr=document.getElementById('drawer');dr.classList.remove('show');dr.setAttribute('aria-hidden','true');}
 
@@ -1203,7 +1203,7 @@ function renderAlertas(T,S,B){
   const item=(r,ov)=>{const dd=r.vencimento?pdate(r.vencimento):null;
     return `<div class="recitem ${ov?'ov':''}"><div class="recdate"><div class="d nums">${dd?String(dd.getDate()).padStart(2,'0'):'—'}</div><div class="mo">${dd?MONTHS[dd.getMonth()]:''}</div></div>
       <div class="recwho"><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · ${esc(r.sale.origem)}</small></div>
-      <div class="recpv nums">${brl0.format(r.valor)}</div>
+      <div class="recpv nums">${money(r.valor)}</div>
       <button class="paybtn" data-s="${r.sale.id}" data-pi="${r.pi}">Marcar pago</button></div>`;};
   const sec=(title,arr,cls)=>arr.length?`<div class="alertsec"><div class="ah ${cls||''}">${title} · ${money(arr.reduce((s,r)=>s+r.valor,0))}</div>${arr.map(r=>item(r,cls==='ov')).join('')}</div>`:'';
   B.innerHTML=cta+sec('Vencidas',over,'ov')+sec('Vencem hoje',today,'today')+sec('Próximos 7 dias',soon,'')
@@ -1224,7 +1224,7 @@ function checkNotify(){
   if(!notifOn())return; const tISO=todayISO(); let seen={}; try{seen=JSON.parse(localStorage.getItem('vx_notified')||'{}')}catch(e){}
   let changed=false;
   dueList().forEach(r=>{const key=r.id+'|'+tISO; if(!seen[key]){
-    try{new Notification('Cobrança · Grupo Virax',{body:(r.sale.cliente||'Cliente')+' — '+brl0.format(r.valor)+(r.vencimento<tISO?' (vencida)':' — vence hoje'),tag:r.id});}catch(e){}
+    try{new Notification('Cobrança · Grupo Virax',{body:(r.sale.cliente||'Cliente')+' — '+money(r.valor)+(r.vencimento<tISO?' (vencida)':' — vence hoje'),tag:r.id});}catch(e){}
     seen[key]=Date.now(); changed=true; }});
   if(changed){ // limpa chaves antigas (>45 dias)
     const cut=Date.now()-45*864e5; Object.keys(seen).forEach(k=>{if(seen[k]<cut)delete seen[k];});
@@ -1340,10 +1340,10 @@ function readParc(){return [...document.querySelectorAll('#parcList .parcrow')].
 function updateSumm(){const total=getValor();const ent=+document.getElementById('f_entrada').value||0;const resid=+document.getElementById('f_resid').value||0;
   const parc=readParc().reduce((s,p)=>s+p.valor,0);const alloc=ent+parc+resid;const diff=total-alloc;const el=document.getElementById('summ');
   if(!total){el.className='summ';el.innerHTML='<span class="st">Escolha um produto para começar.</span>';return;}
-  const base=`<span class="st">Total <b>${brl0.format(total)}</b></span><span class="st">Entrada <b>${brl0.format(ent)}</b></span><span class="st">Parcelas <b>${brl0.format(parc)}</b></span><span class="st">Residual <b>${brl0.format(resid)}</b></span>`;
+  const base=`<span class="st">Total <b>${money(total)}</b></span><span class="st">Entrada <b>${money(ent)}</b></span><span class="st">Parcelas <b>${money(parc)}</b></span><span class="st">Residual <b>${money(resid)}</b></span>`;
   if(Math.abs(diff)<1){el.className='summ ok';el.innerHTML=base+'<span class="status">✓ tudo distribuído</span>';}
-  else if(diff>0){el.className='summ bad';el.innerHTML=base+`<span class="status">faltam ${brl0.format(diff)}</span>`;}
-  else{el.className='summ bad';el.innerHTML=base+`<span class="status">${brl0.format(-diff)} a mais</span>`;}
+  else if(diff>0){el.className='summ bad';el.innerHTML=base+`<span class="status">faltam ${money(diff)}</span>`;}
+  else{el.className='summ bad';el.innerHTML=base+`<span class="status">${money(-diff)} a mais</span>`;}
 }
 async function saveSale(){const valor=getValor();if(!valor){flash('Escolha o produto / informe o valor.');return;}
   let parc=readParc();
