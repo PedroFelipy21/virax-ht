@@ -772,6 +772,8 @@ const MONTHS_FULL=['janeiro','fevereiro','março','abril','maio','junho','julho'
 const brl0=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
 const brl2=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
 function compact(v){v=v||0;if(v>=1e6)return 'R$ '+(v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi';if(v>=1000)return 'R$ '+Math.round(v/1000).toLocaleString('pt-BR')+' mil';return brl0.format(v);}
+/* valor EXATO com centavos (painel High Ticket) — ex.: R$ 57.500,00 */
+function money(v){return brl2.format(v||0);}
 function todayISO(){return new Date().toISOString().slice(0,10);}
 function ymOf(iso){return (iso||'').slice(0,7);}
 function monthLabelFull(ym){const[y,m]=ym.split('-');return MONTHS_FULL[(+m)-1]+' '+y;}
@@ -911,19 +913,19 @@ function renderTV(){
     <div class="val">${valStr}</div><div class="sub">${sub}</div>
     ${sparkColor?`<div class="tvspark"><i style="width:${Math.max(3,sparkW)}%;background:${sparkColor}"></i></div>`:''}</div>`;
   document.getElementById('tvKpis').innerHTML=
-    card('hero','var(--violet-2)','Faturado (HT)',compact(m.fat),brl2.format(m.fat),'var(--violet-2)',100)+
-    card('','var(--emerald)','Caixa coletado',compact(m.col),(m.fat?Math.round(m.col/m.fat*100)+'% das vendas':'recebido'),'var(--emerald)',pc)+
-    card('','var(--gold)','A receber',compact(due),'vence em '+mes,'var(--gold)',Math.min(100,m.fat?due/m.fat*100:0))+
+    card('hero','var(--violet-2)','Faturado (HT)',money(m.fat),brl2.format(m.fat),'var(--violet-2)',100)+
+    card('','var(--emerald)','Caixa coletado',money(m.col),(m.fat?Math.round(m.col/m.fat*100)+'% das vendas':'recebido'),'var(--emerald)',pc)+
+    card('','var(--gold)','A receber',money(due),'vence em '+mes,'var(--gold)',Math.min(100,m.fat?due/m.fat*100:0))+
     card('','var(--text)','Contratos',String(m.n),'no mês',null,0)+
-    card('','var(--text)','Ticket médio',compact(m.ticket),'por contrato',null,0);
+    card('','var(--text)','Ticket médio',money(m.ticket),'por contrato',null,0);
   document.getElementById('tvFechSub').textContent='das vendas de '+mes;
   const fb=document.getElementById('tvFbar');
   if(m.fat>0)fb.innerHTML=`<i style="width:${m.col/m.fat*100}%;background:linear-gradient(90deg,var(--emerald),var(--emerald-2))"></i><i style="width:${m.rec/m.fat*100}%;background:linear-gradient(90deg,var(--gold),var(--gold-2))"></i>`+(m.perda?`<i style="width:${m.perda/m.fat*100}%;background:linear-gradient(90deg,var(--rose),#ff93a9)"></i>`:'');
   else fb.innerHTML='<i style="width:100%;background:var(--surface-3)"></i>';
-  document.getElementById('tvFleg').innerHTML=`<div><span class="sw" style="background:var(--violet)"></span>Faturado <b class="nums">${compact(m.fat)}</b></div><div><span class="sw" style="background:var(--emerald)"></span>Em caixa <b class="nums">${compact(m.col)}</b></div><div><span class="sw" style="background:var(--gold)"></span>Falta receber <b class="nums">${compact(m.rec)}</b></div>`+(m.perda?`<div><span class="sw" style="background:var(--rose)"></span>Perdas/calote <b class="nums">${compact(m.perda)}</b></div>`:'');
+  document.getElementById('tvFleg').innerHTML=`<div><span class="sw" style="background:var(--violet)"></span>Faturado <b class="nums">${money(m.fat)}</b></div><div><span class="sw" style="background:var(--emerald)"></span>Em caixa <b class="nums">${money(m.col)}</b></div><div><span class="sw" style="background:var(--gold)"></span>Falta receber <b class="nums">${money(m.rec)}</b></div>`+(m.perda?`<div><span class="sw" style="background:var(--rose)"></span>Perdas/calote <b class="nums">${money(m.perda)}</b></div>`:'');
   const mp=document.getElementById('tvMetaPct');mp.textContent=meta?Math.round(pct)+'%':'—';mp.style.color=pct>=100?'var(--emerald)':'var(--violet-2)';
   const mf=document.getElementById('tvMetaFill');mf.style.width=pct+'%';mf.style.background=pct>=100?'linear-gradient(90deg,var(--emerald),var(--emerald-2))':'linear-gradient(90deg,var(--violet),var(--violet-2))';
-  document.getElementById('tvMetaFoot').textContent=meta?compact(comFat)+' de '+compact(meta):'meta não definida';
+  document.getElementById('tvMetaFoot').textContent=meta?money(comFat)+' de '+money(meta):'meta não definida';
   requestAnimationFrame(fitTVvals);
 }
 function openTV(){
@@ -962,12 +964,12 @@ function renderResumo(){
     el.dataset.b='1';
     el.querySelectorAll('[data-kpi]').forEach(b=>b.onclick=()=>{ if(b.dataset.kpi==='areceber'){setTab('receb');} else {openDrawer(b.dataset.kpi);} });
   }
-  animNum(document.getElementById('kFat'),m.fat,compact);
-  animNum(document.getElementById('kCol'),m.col,compact);
-  animNum(document.getElementById('kDue'),due,compact);
+  animNum(document.getElementById('kFat'),m.fat,money);
+  animNum(document.getElementById('kCol'),m.col,money);
+  animNum(document.getElementById('kDue'),due,money);
   animNum(document.getElementById('kN'),m.n,v=>Math.round(v));
-  animNum(document.getElementById('kT'),m.ticket,compact);
-  document.getElementById('kFatx').textContent=brl2.format(m.fat)+(m.mrr?' · inclui MRR '+compact(m.mrr)+'/mês':'');
+  animNum(document.getElementById('kT'),m.ticket,money);
+  document.getElementById('kFatx').textContent=brl2.format(m.fat)+(m.mrr?' · inclui MRR '+money(m.mrr)+'/mês':'');
   document.getElementById('kColx').textContent=m.fat?Math.round(m.col/m.fat*100)+'% das vendas do mês':'—';
   document.getElementById('kDuex').textContent='vencem em '+MONTHS_FULL[(+curYM.slice(5))-1];
   document.getElementById('kNx').textContent=m.n?'no mês':'—';
@@ -983,10 +985,10 @@ function renderResumo(){
   if(m.fat>0){fb.innerHTML=`<i style="width:${m.col/m.fat*100}%;background:linear-gradient(90deg,var(--emerald),var(--emerald-2))"></i><i style="width:${m.rec/m.fat*100}%;background:linear-gradient(90deg,var(--gold),var(--gold-2))"></i>`+(m.perda?`<i style="width:${m.perda/m.fat*100}%;background:linear-gradient(90deg,var(--rose),#ff93a9)"></i>`:'');}
   else fb.innerHTML='<i style="width:100%;background:var(--surface-3)"></i>';
   document.getElementById('flegend').innerHTML=
-    `<div><span class="sw" style="background:var(--violet)"></span>Faturado <b class="nums">${compact(m.fat)}</b></div>
-     <div><span class="sw" style="background:var(--emerald)"></span>Em caixa <b class="nums">${compact(m.col)}</b></div>
-     <div><span class="sw" style="background:var(--gold)"></span>Falta receber <b class="nums">${compact(m.rec)}</b></div>`
-     +(m.perda?`<div><span class="sw" style="background:var(--rose)"></span>Perdas/calote <b class="nums">${compact(m.perda)}</b></div>`:'');
+    `<div><span class="sw" style="background:var(--violet)"></span>Faturado <b class="nums">${money(m.fat)}</b></div>
+     <div><span class="sw" style="background:var(--emerald)"></span>Em caixa <b class="nums">${money(m.col)}</b></div>
+     <div><span class="sw" style="background:var(--gold)"></span>Falta receber <b class="nums">${money(m.rec)}</b></div>`
+     +(m.perda?`<div><span class="sw" style="background:var(--rose)"></span>Perdas/calote <b class="nums">${money(m.perda)}</b></div>`:'');
 
   renderMeta(m);
   renderDonut(m);
@@ -999,7 +1001,7 @@ function renderMeta(m){
   const box=document.getElementById('metaBox');
   box.innerHTML=`<div class="metarow"><span class="k">Meta do mês <span style="color:var(--violet-2)">(Comercial)</span></span><span class="pct nums" style="color:${pct>=100?'var(--emerald)':'var(--violet-2)'}">${meta?Math.round(pct)+'%':'—'}</span></div>
     <div class="mtrack"><i id="metaFill"></i></div>
-    <div class="metafoot"><span class="nums">${meta?compact(comFat)+' de '+compact(meta):'meta não definida'}</span>
+    <div class="metafoot"><span class="nums">${meta?money(comFat)+' de '+money(meta):'meta não definida'}</span>
       <button id="editMeta">${meta?'editar meta':'definir meta'}</button></div>`;
   requestAnimationFrame(()=>{const f=document.getElementById('metaFill');f.style.width=pct+'%';
     f.style.background=pct>=100?'linear-gradient(90deg,var(--emerald),var(--emerald-2))':'linear-gradient(90deg,var(--violet),var(--violet-2))';});
@@ -1023,11 +1025,11 @@ function renderDonut(m){
   let arcs='';entries.forEach(([k,v])=>{const frac=tot?v/tot:0;const len=frac*C;
     arcs+=`<circle cx="100" cy="100" r="${R}" fill="none" stroke="${OC[k]||'#A368FF'}" stroke-width="22" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" stroke-linecap="butt" style="transition:stroke-dasharray .9s cubic-bezier(.2,.8,.2,1)"/>`;off+=len;});
   d.innerHTML=`<svg viewBox="0 0 200 200" width="200" height="200"><circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--surface-3)" stroke-width="22"/>${tot?arcs:''}</svg>
-    <div class="center"><div class="l">Faturado</div><div class="v nums">${compact(tot)}</div></div>`;
+    <div class="center"><div class="l">Faturado</div><div class="v nums">${money(tot)}</div></div>`;
   document.getElementById('origSub').textContent=m.n?m.n+' contratos':'';
   document.getElementById('dleg').innerHTML= entries.length?entries.map(([k,v])=>
     `<div class="dlrow"><div class="nm"><span class="sw" style="background:${OC[k]||'#A368FF'}"></span>${esc(k)}</div>
-     <div class="vv nums">${compact(v)}</div><div class="pp">${Math.round(v/tot*100)}%</div></div>`).join('')
+     <div class="vv nums">${money(v)}</div><div class="pp">${Math.round(v/tot*100)}%</div></div>`).join('')
     :'<div class="empty" style="padding:10px"><b>Sem vendas</b>Nenhuma venda neste mês.</div>';
 }
 function renderNextRec(){
@@ -1039,7 +1041,7 @@ function renderNextRec(){
   host.innerHTML=keys.map(k=>{const ov=k==='__over';const label=ov?'Vencido':(MONTHS[(+k.slice(5))-1]+' '+k.slice(2,4));
     return `<div class="nritem"><div class="nrm ${ov?'over':''}">${label}</div>
       <div class="nrbar"><i style="width:${map[k].total/max*100}%;${ov?'background:linear-gradient(90deg,var(--rose),#ff93a9)':''}"></i></div>
-      <div class="nrv nums">${compact(map[k].total)}</div></div>`;}).join('');
+      <div class="nrv nums">${money(map[k].total)}</div></div>`;}).join('');
   requestAnimationFrame(()=>{});
 }
 
@@ -1049,11 +1051,11 @@ function renderReceb(){
   const due=dueInMonth(curYM);
   document.getElementById('rSummary').innerHTML=`
     <div class="rcard hl"><div class="k"><span style="color:var(--violet-2)">▣</span> Total a receber</div>
-      <div class="v nums" style="color:var(--violet-2)">${compact(totalPipe)}</div><div class="s">tudo que ainda vai entrar · todos os meses</div></div>
+      <div class="v nums" style="color:var(--violet-2)">${money(totalPipe)}</div><div class="s">tudo que ainda vai entrar · todos os meses</div></div>
     <div class="rcard"><div class="k"><span style="color:var(--gold)">◆</span> A receber em ${MONTHS_FULL[(+curYM.slice(5))-1]}</div>
-      <div class="v nums" style="color:var(--gold-2)">${compact(due)}</div><div class="s">vence no mês selecionado</div></div>
+      <div class="v nums" style="color:var(--gold-2)">${money(due)}</div><div class="s">vence no mês selecionado</div></div>
     <div class="rcard"><div class="k"><span style="color:var(--rose)">●</span> Vencido</div>
-      <div class="v nums" style="color:${over?'var(--rose)':'var(--muted)'}">${compact(over)}</div><div class="s">parcelas em atraso</div></div>`;
+      <div class="v nums" style="color:${over?'var(--rose)':'var(--muted)'}">${money(over)}</div><div class="s">parcelas em atraso</div></div>`;
 
   // timeline
   const keys=Object.keys(map).sort((a,b)=>{if(a==='__over')return -1;if(b==='__over')return 1;return a.localeCompare(b);});
@@ -1064,7 +1066,7 @@ function renderReceb(){
     const sel=(!ov&&k===(selRecYM||curYM));
     return `<div class="tlmonth ${ov?'over':''} ${sel?'sel':''}" data-k="${k}">
       <div class="ty">${yr}</div><div class="tm">${mo}</div>
-      <div class="tv nums">${compact(map[k].total)}</div>
+      <div class="tv nums">${money(map[k].total)}</div>
       <div class="tc">${map[k].items.length} parcela${map[k].items.length>1?'s':''}</div>
       <div class="tgbar"><i style="width:${map[k].total/max*100}%"></i></div></div>`;}).join('')
     :'<div class="empty" style="padding:30px;width:100%"><b>Nada a receber</b>Sem parcelas pendentes.</div>';
@@ -1079,7 +1081,7 @@ function renderReceb(){
   const gkeys=Object.keys(groups).sort((a,b)=>{if(a==='__over')return -1;if(b==='__over')return 1;return a.localeCompare(b);});
   host.innerHTML=gkeys.map(k=>{const ov=k==='__over';const tot=groups[k].reduce((s,r)=>s+r.valor,0);
     const title=ov?'Vencido':(k==='__none'?'Sem data':monthLabelFull(k));
-    return `<div class="recgroup"><div class="rgh ${ov?'ov':''}">${title}<span class="ln"></span><span class="tot nums">${compact(tot)}</span></div>
+    return `<div class="recgroup"><div class="rgh ${ov?'ov':''}">${title}<span class="ln"></span><span class="tot nums">${money(tot)}</span></div>
       ${groups[k].map(r=>{const dd=r.vencimento?pdate(r.vencimento):null;
         return `<div class="recitem ${ov?'ov':''}">
           <div class="recdate"><div class="d nums">${dd?String(dd.getDate()).padStart(2,'0'):'—'}</div><div class="mo">${dd?MONTHS[dd.getMonth()]:'s/data'}</div></div>
@@ -1109,7 +1111,7 @@ function renderVendas(){
       <td><span class="pill" style="color:${s.tipo==='MRR'?'var(--cyan)':'var(--muted)'}">${s.tipo||'TCV'}</span></td>
       <td class="money">${brl0.format(s.valor)}</td>
       <td><span class="stat" style="color:${sc}"><span class="d" style="background:${sc}"></span>${st}</span>
-        <div class="nums" style="color:var(--faint);font-size:11px">${compact(col)} em caixa</div></td>
+        <div class="nums" style="color:var(--faint);font-size:11px">${money(col)} em caixa</div></td>
       <td style="white-space:nowrap"><button class="editbtn" data-edit="${s.id}" title="Editar">✎</button><button class="trash" data-del="${s.id}" title="Excluir">🗑</button></td></tr>`;}).join('');
   body.querySelectorAll('.editbtn').forEach(b=>b.onclick=()=>{if(mode!=='demo'&&!canWrite){flash('Entre como gestão para editar.');return;}const s=sales().find(x=>x.id===b.dataset.edit);if(s)openModal(s);});
   body.querySelectorAll('.trash').forEach(b=>b.onclick=()=>{if(b.classList.contains('confirm'))delSale(b.dataset.del);
@@ -1123,7 +1125,7 @@ function renderAnalise(){
   for(let i=5;i>=0;i--){const d=new Date(cur.getFullYear(),cur.getMonth()-i,1);const ym=d.toISOString().slice(0,7);tr.push({ym,v:monthMetrics(ym).fat});}
   const tmax=Math.max(1,...tr.map(x=>x.v));
   document.getElementById('trend').innerHTML=tr.map(x=>`<div class="tbar ${x.ym===curYM?'cur':''}">
-    <div class="tv nums">${x.v?compact(x.v):'—'}</div>
+    <div class="tv nums">${x.v?money(x.v):'—'}</div>
     <div class="tb" data-h="${x.v/tmax*100}"></div>
     <div class="tl">${MONTHS[(+x.ym.slice(5))-1]}</div></div>`).join('');
   requestAnimationFrame(()=>{document.querySelectorAll('.trend .tb').forEach(b=>b.style.height=(b.dataset.h||0)+'%');});
@@ -1132,10 +1134,10 @@ function renderAnalise(){
   // columns by product
   const pe=Object.entries(m.prod).sort((a,b)=>b[1]-a[1]);const pmax=Math.max(1,...pe.map(e=>e[1]));
   const pcols=['var(--violet-2)','var(--violet)','var(--violet-3)','#9F7AEA','#7C3AED','var(--pink)'];
-  document.getElementById('prodSub').textContent=m.n?compact(m.fat)+' no mês':'';
+  document.getElementById('prodSub').textContent=m.n?money(m.fat)+' no mês':'';
   document.getElementById('cols').innerHTML=pe.length?pe.map(([k,v],i)=>{const cnt=m.ms.filter(s=>s.produto===k).length;
     return `<div class="col"><div class="bar" style="background:linear-gradient(180deg,${pcols[i%pcols.length]},var(--violet-3))" data-h="${v/pmax*100}">
-      <span class="bv nums">${compact(v)}</span></div><div class="cl">${esc(k)}<small>${cnt}×</small></div></div>`;}).join('')
+      <span class="bv nums">${money(v)}</span></div><div class="cl">${esc(k)}<small>${cnt}×</small></div></div>`;}).join('')
     :'<div class="empty" style="padding:30px;width:100%"><b>Sem vendas</b>Nenhuma venda neste mês.</div>';
   requestAnimationFrame(()=>{document.querySelectorAll('#cols .bar').forEach(b=>b.style.height=(b.dataset.h||0)+'%');});
 
@@ -1150,7 +1152,7 @@ function renderAnalise(){
   requestAnimationFrame(()=>{document.querySelectorAll('#splitRev .sbtrack i,#splitOrig .sbtrack i').forEach(i=>i.style.width=(i.dataset.w||0)+'%');});
 }
 function splitRow(label,v,tot,color,suffix){
-  return `<div class="sbrow"><div class="sbhd"><span>${esc(label)}</span><b class="nums">${compact(v)}${suffix||''} · ${Math.round(v/tot*100)}%</b></div>
+  return `<div class="sbrow"><div class="sbhd"><span>${esc(label)}</span><b class="nums">${money(v)}${suffix||''} · ${Math.round(v/tot*100)}%</b></div>
     <div class="sbtrack"><i style="background:${color}" data-w="${v/tot*100}"></i></div></div>`;
 }
 
@@ -1161,14 +1163,14 @@ function openDrawer(type){
   const monthName=MONTHS_FULL[(+curYM.slice(5))-1];
   if(type==='faturado'){
     T.textContent='Vendas de '+monthName;S.textContent=m.n+' contratos';
-    B.innerHTML=`<div class="dtot nums">${compact(m.fat)}</div><div class="dsub">faturado no mês</div>`+saleRows(m.ms,'valor');
+    B.innerHTML=`<div class="dtot nums">${money(m.fat)}</div><div class="dsub">faturado no mês</div>`+saleRows(m.ms,'valor');
   }else if(type==='caixa'){
     T.textContent='Caixa coletado';S.textContent=monthName+' · entradas + parcelas pagas';
-    B.innerHTML=`<div class="dtot nums" style="color:var(--emerald-2)">${compact(m.col)}</div><div class="dsub">${Math.round(m.fat?m.col/m.fat*100:0)}% das vendas do mês já em caixa</div>`+saleRows(m.ms,'col');
+    B.innerHTML=`<div class="dtot nums" style="color:var(--emerald-2)">${money(m.col)}</div><div class="dsub">${Math.round(m.fat?m.col/m.fat*100:0)}% das vendas do mês já em caixa</div>`+saleRows(m.ms,'col');
   }else if(type==='areceber'){
     const due=dueInMonth(curYM);T.textContent='A receber em '+monthName;S.textContent='parcelas que vencem no mês';
     const items=allReceivables().filter(r=>ymOf(r.vencimento)===curYM);
-    B.innerHTML=`<div class="dtot nums" style="color:var(--gold-2)">${compact(due)}</div><div class="dsub">${items.length} parcela(s) neste mês · <a id="goReceb" style="color:var(--violet-2);cursor:pointer;text-decoration:underline dotted">ver cronograma completo</a></div>`+
+    B.innerHTML=`<div class="dtot nums" style="color:var(--gold-2)">${money(due)}</div><div class="dsub">${items.length} parcela(s) neste mês · <a id="goReceb" style="color:var(--violet-2);cursor:pointer;text-decoration:underline dotted">ver cronograma completo</a></div>`+
       (items.length?items.map(r=>`<div class="dsale"><div><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · vence ${pdate(r.vencimento).toLocaleDateString('pt-BR')}</small></div><div class="m nums">${brl0.format(r.valor)}</div></div>`).join('')
         :'<div class="empty" style="padding:24px"><b>Nada vence neste mês</b>Veja o cronograma completo.</div>');
     setTimeout(()=>{const g=document.getElementById('goReceb');if(g)g.onclick=()=>{closeDrawer();setTab('receb');};},0);
@@ -1180,7 +1182,7 @@ function saleRows(ms,kind){
   return [...ms].sort((a,b)=>b.data.localeCompare(a.data)).map(s=>{const col=collectedOf(s);
     const right=kind==='col'?col:s.valor;const oc=OC[s.origem]||'#A368FF';
     return `<div class="dsale"><div><b>${esc(s.cliente||'—')}</b><small>${esc(s.produto)} · <span style="color:${oc}">${esc(s.origem)}</span></small></div>
-      <div><div class="m nums">${brl0.format(right)}</div>${kind==='col'?`<div class="ms" style="color:var(--faint)">de ${compact(s.valor)}</div>`:(col<s.valor?`<div class="ms" style="color:var(--gold)">${compact(s.valor-col)} a receber</div>`:`<div class="ms" style="color:var(--emerald)">quitado</div>`)}</div></div>`;}).join('');
+      <div><div class="m nums">${brl0.format(right)}</div>${kind==='col'?`<div class="ms" style="color:var(--faint)">de ${money(s.valor)}</div>`:(col<s.valor?`<div class="ms" style="color:var(--gold)">${money(s.valor-col)} a receber</div>`:`<div class="ms" style="color:var(--emerald)">quitado</div>`)}</div></div>`;}).join('');
 }
 function closeDrawer(){document.getElementById('scrim').classList.remove('show');const dr=document.getElementById('drawer');dr.classList.remove('show');dr.setAttribute('aria-hidden','true');}
 
@@ -1194,7 +1196,7 @@ function renderAlertas(T,S,B){
   const se=new Date(); se.setDate(se.getDate()+7); const soonISO=se.toISOString().slice(0,10);
   const soon=all.filter(r=>r.vencimento&&r.vencimento>tISO&&r.vencimento<=soonISO);
   const totalDue=[...over,...today].reduce((s,r)=>s+r.valor,0);
-  T.textContent='Cobranças'; S.textContent=(over.length+today.length)+' para cobrar agora · '+compact(totalDue);
+  T.textContent='Cobranças'; S.textContent=(over.length+today.length)+' para cobrar agora · '+money(totalDue);
   const cta = notifOn()
     ? '<div class="notifcta on">🔔 Notificações ativadas neste aparelho — você será avisado quando a cobrança vencer.</div>'
     : '<div class="notifcta">Receba um aviso no computador/celular quando uma cobrança vencer.<button class="btn primary" id="enableNotifBtn">🔔 Ativar notificações</button></div>';
@@ -1203,7 +1205,7 @@ function renderAlertas(T,S,B){
       <div class="recwho"><b>${esc(r.sale.cliente||'—')}</b><small>${esc(r.sale.produto)} · ${esc(r.sale.origem)}</small></div>
       <div class="recpv nums">${brl0.format(r.valor)}</div>
       <button class="paybtn" data-s="${r.sale.id}" data-pi="${r.pi}">Marcar pago</button></div>`;};
-  const sec=(title,arr,cls)=>arr.length?`<div class="alertsec"><div class="ah ${cls||''}">${title} · ${compact(arr.reduce((s,r)=>s+r.valor,0))}</div>${arr.map(r=>item(r,cls==='ov')).join('')}</div>`:'';
+  const sec=(title,arr,cls)=>arr.length?`<div class="alertsec"><div class="ah ${cls||''}">${title} · ${money(arr.reduce((s,r)=>s+r.valor,0))}</div>${arr.map(r=>item(r,cls==='ov')).join('')}</div>`:'';
   B.innerHTML=cta+sec('Vencidas',over,'ov')+sec('Vencem hoje',today,'today')+sec('Próximos 7 dias',soon,'')
     +((over.length+today.length+soon.length)===0?'<div class="empty" style="padding:30px"><b>Nada a cobrar agora</b>Sem parcelas vencidas ou vencendo.</div>':'');
   const en=document.getElementById('enableNotifBtn'); if(en)en.onclick=enableNotif;
