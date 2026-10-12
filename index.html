@@ -110,7 +110,7 @@
   .kpi .arrow{margin-left:auto;color:var(--faint);transition:.16s}
   .kpi:not(.static):hover .arrow{color:var(--violet-2);transform:translate(2px,-2px)}
   .kpi .arrow svg{width:15px;height:15px;display:block}
-  .kpi .val{font-family:var(--ff-d);font-weight:800;line-height:1;margin-top:13px;letter-spacing:-.6px}
+  .kpi .val{font-family:var(--ff-d);font-weight:800;line-height:1;margin-top:13px;letter-spacing:-.6px;white-space:nowrap}
   .kpi .val{font-size:clamp(23px,2.5vw,31px)}
   .kpi.hero .val{font-size:clamp(34px,4.3vw,54px)}
   .kpi .exact{color:var(--faint);font-size:12.5px;font-weight:600;margin-top:9px}
@@ -860,11 +860,16 @@ function dueInMonth(ym){ // scheduled to land in that month (unpaid, not overdue
 }
 
 /* ========== render root ========== */
+/* encolhe a fonte do número até caber no card (evita corte quando o valor é grande) */
+function fitNum(el){if(!el)return;el.style.fontSize='';let fs=parseFloat(getComputedStyle(el).fontSize)||40,g=0;
+  while(el.scrollWidth>el.clientWidth+0.5&&fs>13&&g<80){fs-=1;el.style.fontSize=fs+'px';g++;}}
 function animNum(el,to,fmt){
   const from=_lastNum[el.id]||0;_lastNum[el.id]=to;
-  if(matchMedia('(prefers-reduced-motion:reduce)').matches||Math.abs(to-from)<1){el.textContent=fmt(to);return;}
-  const t0=performance.now();function step(t){const k=Math.min(1,(t-t0)/850);const e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1)requestAnimationFrame(step);}requestAnimationFrame(step);
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches||Math.abs(to-from)<1){el.textContent=fmt(to);fitNum(el);return;}
+  const t0=performance.now();function step(t){const k=Math.min(1,(t-t0)/850);const e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1)requestAnimationFrame(step);else fitNum(el);}requestAnimationFrame(step);
 }
+let _fitT=null;
+window.addEventListener('resize',()=>{clearTimeout(_fitT);_fitT=setTimeout(()=>{['kFat','kCol','kDue','kN','kT'].forEach(id=>fitNum(document.getElementById(id)));},150);});
 function setTab(t){tab=t;try{localStorage.setItem('vx_tab',t)}catch(e){}
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==t);
