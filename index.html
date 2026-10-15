@@ -494,6 +494,9 @@
         <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span class="bellbadge" id="bellBadge" hidden></span>
       </button>
+      <button class="btn" id="histBtn" title="Histórico de ações" style="padding:11px 13px">
+        <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <button class="btn" id="tvBtn" title="Modo TV — tela cheia para o escritório" style="padding:11px 13px">
         <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><rect x="2" y="4" width="20" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
@@ -829,6 +832,17 @@ let _lastNum={};
 function sales(){return mode==='demo'?_demo:realSales;}
 function metaFor(ym){const s=mode==='demo'?DEMO_META:realMeta;return +s[ym]||0;}
 function collectedOf(s){let c=+s.entrada||0;(s.parcelas||[]).forEach(p=>{if(p.pago)c+=+p.valor||0;});return c;}
+/* mês em que o dinheiro REALMENTE entrou: parcela paga = mês do pagamento (ou vencimento); entrada = mês da venda */
+function paidMonthOf(p){return ymOf(p.dataPagamento||p.vencimento||'');}
+function cashItems(ym){ // tudo que entrou no caixa NESTE mês (entradas + parcelas pagas no mês)
+  const out=[];
+  sales().forEach(s=>{
+    if((+s.entrada||0)>0 && ymOf(s.data)===ym) out.push({sale:s,tipo:'entrada',valor:+s.entrada||0,quando:s.data});
+    (s.parcelas||[]).forEach(p=>{ if(p.pago && paidMonthOf(p)===ym) out.push({sale:s,tipo:'parcela',valor:+p.valor||0,quando:p.dataPagamento||p.vencimento||''}); });
+  });
+  out.sort((a,b)=>(b.quando||'').localeCompare(a.quando||''));return out;
+}
+function cashInMonth(ym){return cashItems(ym).reduce((t,x)=>t+x.valor,0);}
 function salePerda(s){let r=0;(s.parcelas||[]).forEach(p=>{if(!p.pago&&p.perdida)r+=+p.valor||0;});return r;}
 function hasCalote(s){return (s.parcelas||[]).some(p=>p.perdida);}
 
@@ -838,7 +852,7 @@ function monthMetrics(ym){
   let fat=0,col=0,tcv=0,mrr=0,perda=0;const orig={},prod={};
   ms.forEach(s=>{const v=+s.valor||0;fat+=v;col+=collectedOf(s);perda+=salePerda(s);if(s.tipo==='MRR')mrr+=v;else tcv+=v;
     orig[s.origem]=(orig[s.origem]||0)+v;prod[s.produto]=(prod[s.produto]||0)+v;});
-  return {ms,fat,col,rec:Math.max(0,fat-col-perda),perda,tcv,mrr,n:ms.length,ticket:ms.length?fat/ms.length:0,orig,prod};
+  return {ms,fat,col,cashIn:cashInMonth(ym),rec:Math.max(0,fat-col-perda),perda,tcv,mrr,n:ms.length,ticket:ms.length?fat/ms.length:0,orig,prod};
 }
 // unpaid parcelas across all sales
 function allReceivables(){
@@ -912,14 +926,14 @@ function renderTV(){
   const meta=metaFor(curYM);const pct=meta?Math.min(100,comFat/meta*100):0;
   const mes=MONTHS_FULL[(+curYM.slice(5))-1];
   document.getElementById('tvMonth').textContent=mes+' '+curYM.slice(0,4);
-  const pc=m.fat?m.col/m.fat*100:0;
+  const pc=(m.cashIn+due)>0?m.cashIn/(m.cashIn+due)*100:0;
   const card=(cls,color,cap,valStr,sub,sparkColor,sparkW)=>`<div class="tvk ${cls}">
     <div class="cap"><span class="dot" style="background:${color}"></span><span class="t">${cap}</span></div>
     <div class="val">${valStr}</div><div class="sub">${sub}</div>
     ${sparkColor?`<div class="tvspark"><i style="width:${Math.max(3,sparkW)}%;background:${sparkColor}"></i></div>`:''}</div>`;
   document.getElementById('tvKpis').innerHTML=
     card('hero','var(--violet-2)','Faturado (HT)',money(m.fat),brl2.format(m.fat),'var(--violet-2)',100)+
-    card('','var(--emerald)','Caixa coletado',money(m.col),(m.fat?Math.round(m.col/m.fat*100)+'% das vendas':'recebido'),'var(--emerald)',pc)+
+    card('','var(--emerald)','Caixa coletado',money(m.cashIn),'recebido em '+mes,'var(--emerald)',pc)+
     card('','var(--gold)','A receber',money(due),'vence em '+mes,'var(--gold)',Math.min(100,m.fat?due/m.fat*100:0))+
     card('','var(--text)','Contratos',String(m.n),'no mês',null,0)+
     card('','var(--text)','Ticket médio',money(m.ticket),'por contrato',null,0);
@@ -970,16 +984,16 @@ function renderResumo(){
     el.querySelectorAll('[data-kpi]').forEach(b=>b.onclick=()=>{ if(b.dataset.kpi==='areceber'){setTab('receb');} else {openDrawer(b.dataset.kpi);} });
   }
   animNum(document.getElementById('kFat'),m.fat,money);
-  animNum(document.getElementById('kCol'),m.col,money);
+  animNum(document.getElementById('kCol'),m.cashIn,money);
   animNum(document.getElementById('kDue'),due,money);
   animNum(document.getElementById('kN'),m.n,v=>Math.round(v));
   animNum(document.getElementById('kT'),m.ticket,money);
   document.getElementById('kFatx').textContent=m.mrr?('inclui MRR '+money(m.mrr)+'/mês'):'faturamento bruto do mês';
-  document.getElementById('kColx').textContent=m.fat?Math.round(m.col/m.fat*100)+'% das vendas do mês':'—';
+  document.getElementById('kColx').textContent='recebido em '+MONTHS_FULL[(+curYM.slice(5))-1];
   document.getElementById('kDuex').textContent='vencem em '+MONTHS_FULL[(+curYM.slice(5))-1];
   document.getElementById('kNx').textContent=m.n?'no mês':'—';
   document.getElementById('kTx').textContent=m.n?'por contrato':'—';
-  const pc=m.fat?m.col/m.fat*100:0;
+  const pc=(m.cashIn+due)>0?m.cashIn/(m.cashIn+due)*100:0;
   requestAnimationFrame(()=>{document.getElementById('spkFat').style.width='100%';
     document.getElementById('spkCol').style.width=pc+'%';document.getElementById('spkDue').style.width=Math.min(100,m.fat?due/m.fat*100:0)+'%';
     document.getElementById('spkN').style.width='100%';document.getElementById('spkT').style.width='100%';});
@@ -1020,7 +1034,8 @@ function editMeta(){
   row.innerHTML=`<input class="metain nums" id="metaIn" type="number" step="1000" value="${cur}" placeholder="500000"><button id="metaOk" class="btn primary" style="padding:8px 14px">ok</button>`;
   const inp=document.getElementById('metaIn');inp.focus();
   const save=async()=>{const v=Math.max(0,+inp.value||0);const next=Object.assign({},realMeta,{[curYM]:v});
-    const {error}=await SB.from('config').upsert({id:'app',metas:next});if(error)flash('Não foi possível salvar a meta — entre como gestão.');};
+    const {error}=await SB.from('config').upsert({id:'app',metas:next});if(error){flash('Não foi possível salvar a meta — entre como gestão.');return;}
+    logActivity('meta',MONTHS_FULL[(+curYM.slice(5))-1]+' · '+money(v));};
   document.getElementById('metaOk').onclick=save;
   inp.onkeydown=e=>{if(e.key==='Enter')save();if(e.key==='Escape')render();};
 }
@@ -1170,8 +1185,11 @@ function openDrawer(type){
     T.textContent='Vendas de '+monthName;S.textContent=m.n+' contratos';
     B.innerHTML=`<div class="dtot nums">${money(m.fat)}</div><div class="dsub">faturado no mês</div>`+saleRows(m.ms,'valor');
   }else if(type==='caixa'){
-    T.textContent='Caixa coletado';S.textContent=monthName+' · entradas + parcelas pagas';
-    B.innerHTML=`<div class="dtot nums" style="color:var(--emerald-2)">${money(m.col)}</div><div class="dsub">${Math.round(m.fat?m.col/m.fat*100:0)}% das vendas do mês já em caixa</div>`+saleRows(m.ms,'col');
+    const items=cashItems(curYM);
+    T.textContent='Caixa coletado';S.textContent='recebido em '+monthName;
+    B.innerHTML=`<div class="dtot nums" style="color:var(--emerald-2)">${money(m.cashIn)}</div><div class="dsub">${items.length} entrada(s) no mês · entradas de vendas + parcelas pagas</div>`+
+      (items.length?items.map(x=>`<div class="dsale"><div><b>${esc(x.sale.cliente||'—')}</b><small>${x.tipo==='entrada'?'Entrada da venda':'Parcela paga'} · ${x.quando?pdate(x.quando).toLocaleDateString('pt-BR'):''}</small></div><div class="m nums" style="color:var(--emerald-2)">${money(x.valor)}</div></div>`).join('')
+        :'<div class="empty" style="padding:24px"><b>Nada entrou neste mês</b>Sem entradas ou parcelas pagas.</div>');
   }else if(type==='areceber'){
     const due=dueInMonth(curYM);T.textContent='A receber em '+monthName;S.textContent='parcelas que vencem no mês';
     const items=allReceivables().filter(r=>ymOf(r.vencimento)===curYM);
@@ -1180,6 +1198,7 @@ function openDrawer(type){
         :'<div class="empty" style="padding:24px"><b>Nada vence neste mês</b>Veja o cronograma completo.</div>');
     setTimeout(()=>{const g=document.getElementById('goReceb');if(g)g.onclick=()=>{closeDrawer();setTab('receb');};},0);
   }else if(type==='alertas'){ renderAlertas(T,S,B); }
+  else if(type==='historico'){ renderHistorico(T,S,B); reloadLog(); }
   scrim.classList.add('show');dr.classList.add('show');dr.setAttribute('aria-hidden','false');
 }
 function saleRows(ms,kind){
@@ -1190,6 +1209,34 @@ function saleRows(ms,kind){
       <div><div class="m nums">${money(right)}</div>${kind==='col'?`<div class="ms" style="color:var(--faint)">de ${money(s.valor)}</div>`:(col<s.valor?`<div class="ms" style="color:var(--gold)">${money(s.valor-col)} a receber</div>`:`<div class="ms" style="color:var(--emerald)">quitado</div>`)}</div></div>`;}).join('');
 }
 function closeDrawer(){document.getElementById('scrim').classList.remove('show');const dr=document.getElementById('drawer');dr.classList.remove('show');dr.setAttribute('aria-hidden','true');}
+
+/* ===== histórico de ações (log compartilhado) ===== */
+let activityLog=[];
+async function logActivity(action,detalhe){
+  try{ if(SB) await SB.from('activity_log').insert({action:action,detalhe:detalhe||'',ator:(session&&session.user&&session.user.email)||''}); }catch(e){}
+}
+async function reloadLog(){ if(!SB)return;
+  try{const {data,error}=await SB.from('activity_log').select('*').order('created_at',{ascending:false}).limit(200);
+    if(!error){activityLog=data||[];
+      const dr=document.getElementById('drawer');
+      if(dr&&dr.classList.contains('show')&&document.getElementById('drTitle').textContent==='Histórico')
+        renderHistorico(document.getElementById('drTitle'),document.getElementById('drSub'),document.getElementById('drBody'));
+    }}catch(e){}
+}
+const HIST_IC={venda:'🟣',edicao:'✏️',pago:'✅',baixa_desfeita:'↩️',excluir:'🗑️',dre:'📄',meta:'🎯',financeiro:'💰'};
+const HIST_LB={venda:'Nova venda',edicao:'Editou venda',pago:'Baixa de parcela',baixa_desfeita:'Baixa desfeita',excluir:'Excluiu venda',dre:'Importou DRE',meta:'Definiu meta',financeiro:'Editou financeiro'};
+function relTime(iso){try{const d=new Date(iso),n=new Date(),s=Math.round((n-d)/1000);
+  if(s<60)return 'agora';if(s<3600)return 'há '+Math.floor(s/60)+' min';if(s<86400)return 'há '+Math.floor(s/3600)+' h';
+  const dd=Math.floor(s/86400);if(dd===1)return 'ontem';if(dd<7)return 'há '+dd+' dias';
+  return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}catch(e){return ''}}
+function renderHistorico(T,S,B){
+  T.textContent='Histórico'; S.textContent=activityLog.length?(activityLog.length+' ações registradas'):'tudo que a gestão faz aqui';
+  if(!activityLog.length){B.innerHTML='<div class="empty" style="padding:30px"><b>Sem registros ainda</b>Adicionar venda, dar baixa, importar DRE e editar aparecem aqui.</div>';return;}
+  B.innerHTML=activityLog.map(e=>{const ator=(e.ator||'').split('@')[0]||'sistema';
+    return `<div class="dsale"><div><b>${HIST_IC[e.action]||'•'} ${HIST_LB[e.action]||esc(e.action)}</b><small>${esc(e.detalhe||'')} · por ${esc(ator)}</small></div>
+      <div class="ms" style="color:var(--faint);white-space:nowrap">${relTime(e.created_at)}</div></div>`;}).join('');
+}
+document.getElementById('histBtn').onclick=()=>openDrawer('historico');
 
 /* ===== cobranças / notificações ===== */
 function dueList(){const t=todayISO();return allReceivables().filter(r=>r.vencimento&&r.vencimento<=t);}
@@ -1278,9 +1325,15 @@ async function payParcela(id,pi){const arr=sales();const s=arr.find(x=>x.id===id
   const parc=(s.parcelas||[]).map((p,i)=>i===pi?Object.assign({},p,{pago:true,dataPagamento:todayISO()}):p);
   if(mode==='demo'){s.parcelas=parc;render();flash('Parcela marcada como paga.');return;}
   const {error}=await SB.from('sales').update({parcelas:parc}).eq('id',id);
-  flash(error?('Não foi possível dar baixa'+(canWrite?'.':' — entre como gestão.')):'Baixa registrada.');}
-async function delSale(id){if(mode==='demo'){_demo=_demo.filter(s=>s.id!==id);render();return;}
-  const {error}=await SB.from('sales').delete().eq('id',id);if(error)flash('Não foi possível excluir — entre como gestão.');}
+  if(error){flash('Não foi possível dar baixa'+(canWrite?'.':' — entre como gestão.'));return;}
+  flash('Baixa registrada.');
+  const pv=(s.parcelas&&s.parcelas[pi])?(+s.parcelas[pi].valor||0):0;
+  logActivity('pago',(s.cliente||'—')+' · parcela '+money(pv));}
+async function delSale(id){const s=sales().find(x=>x.id===id);
+  if(mode==='demo'){_demo=_demo.filter(s=>s.id!==id);render();return;}
+  const {error}=await SB.from('sales').delete().eq('id',id);
+  if(error){flash('Não foi possível excluir — entre como gestão.');return;}
+  logActivity('excluir',(s&&s.cliente)||'—');}
 
 /* ========== modal ========== */
 const mscrim=document.getElementById('mscrim');let fTipo='TCV',fOrig='Comercial',fProd=null;
@@ -1366,10 +1419,10 @@ async function saveSale(){const valor=getValor();if(!valor){flash('Escolha o pro
   }
   if(editingId){const {error}=await SB.from('sales').update(base).eq('id',editingId);
     if(error){flash('Não foi possível atualizar — entre como gestão.');return;}
-    closeModal();curYM=ymOf(base.data);flash('Venda atualizada.');
+    closeModal();curYM=ymOf(base.data);flash('Venda atualizada.');logActivity('edicao',(base.cliente||'—')+' · '+money(valor));
   }else{const {error}=await SB.from('sales').insert([base]);
     if(error){flash('Não foi possível salvar — entre como gestão.');return;}
-    closeModal();curYM=ymOf(base.data);flash('Venda salva.');
+    closeModal();curYM=ymOf(base.data);flash('Venda salva.');logActivity('venda',(base.cliente||'—')+' · '+money(valor)+' · '+base.origem);
   }
 }
 
@@ -1501,7 +1554,9 @@ async function editFin(fk){
   if(inp==null)return;
   const t=inp.trim(); const val=t===''?null:(parseFloat(t.replace(/[R$\s.]/g,'').replace(',','.'))||0);
   const {error}=await SB.from('financeiro').update({[fk]:val}).eq('mes',curYM);
-  flash(error?'Não foi possível salvar.':'Salvo.');
+  if(error){flash('Não foi possível salvar.');return;}
+  flash('Salvo.');
+  logActivity('financeiro',(fk==='recebido'?'Recebido':'Saldo')+' '+curYM+' · '+(val==null?'(limpo)':money(val)));
 }
 function applyWorld(){
   const ht=document.getElementById('worldHT'),fin=document.getElementById('worldFin');
@@ -1562,6 +1617,7 @@ async function doImportDRE(){
     const {error}=await SB.from('financeiro').upsert(parsed);
     if(error){msg.style.color='var(--rose)';msg.textContent='Erro ao salvar — entre como gestão.';return;}
     dreScrim.classList.remove('show'); curYM=parsed.mes; world='fin'; flash('DRE de '+parsed.mes+' importado!');
+    logActivity('dre','DRE '+parsed.mes+' · receita '+money(parsed.receita_bruta));
   }catch(e){msg.style.color='var(--rose)';msg.textContent='Erro ao ler o PDF.';}
 }
 document.getElementById('dreBtn').onclick=openDRE;
@@ -1606,11 +1662,12 @@ function initSupabase(){
   if(authB)authB.hidden=false;
   SB.auth.getSession().then(({data})=>{session=data.session;updateAuth();}).catch(()=>{});
   SB.auth.onAuthStateChange((_e,s)=>{session=s;updateAuth();});
-  reloadSales();reloadConfig();reloadFin();
+  reloadSales();reloadConfig();reloadFin();reloadLog();
   try{
     SB.channel('rt-sales').on('postgres_changes',{event:'*',schema:'public',table:'sales'},reloadSales).subscribe();
     SB.channel('rt-config').on('postgres_changes',{event:'*',schema:'public',table:'config'},reloadConfig).subscribe();
     SB.channel('rt-fin').on('postgres_changes',{event:'*',schema:'public',table:'financeiro'},reloadFin).subscribe();
+    SB.channel('rt-log').on('postgres_changes',{event:'INSERT',schema:'public',table:'activity_log'},reloadLog).subscribe();
   }catch(e){}
   render();
 }
