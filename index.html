@@ -702,6 +702,10 @@
           <div class="field"><label for="f_insta">Instagram</label><input id="f_insta" placeholder="@usuario"></div>
         </div>
         <div class="row2">
+          <div class="field"><label for="f_doc">CPF / CNPJ</label><input id="f_doc" placeholder="000.000.000-00 ou 00.000.000/0000-00"></div>
+          <div class="field"><label for="f_endereco">Endereço completo</label><input id="f_endereco" placeholder="Rua, nº, bairro, cidade/UF, CEP"></div>
+        </div>
+        <div class="row2">
           <div class="field"><label for="f_data">Data da venda</label><input type="date" id="f_data"></div>
           <div class="field"><label>Tipo de receita</label>
             <div class="psel" id="f_tipo"><button type="button" data-t="TCV" class="on">Contrato (TCV)</button><button type="button" data-t="MRR">Recorrente (MRR)</button></div>
@@ -1363,6 +1367,8 @@ function openModal(sale){
     document.getElementById('f_data').value=sale.data||todayISO();
     document.getElementById('f_cliente').value=sale.cliente||'';
     document.getElementById('f_insta').value=sale.instagram||'';
+    document.getElementById('f_doc').value=sale.cpf_cnpj||'';
+    document.getElementById('f_endereco').value=sale.endereco||'';
     document.getElementById('f_entrada').value=sale.entrada||'';
     document.getElementById('f_resid').value=(sale.residual&&sale.residual.valor)||'';
     document.getElementById('f_adecidir').checked=!!(sale.residual&&sale.residual.aDecidir);
@@ -1377,7 +1383,7 @@ function openModal(sale){
     (sale.parcelas||[]).forEach(p=>addParcRow(p.valor,p.vencimento));
   }else{
     document.getElementById('f_data').value=todayISO();
-    ['f_cname','f_cval','f_cliente','f_insta','f_entrada','f_resid'].forEach(id=>document.getElementById(id).value='');
+    ['f_cname','f_cval','f_cliente','f_insta','f_doc','f_endereco','f_entrada','f_resid'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f_adecidir').checked=false;
     fTipo='TCV';document.querySelectorAll('#f_tipo button').forEach(b=>b.classList.toggle('on',b.dataset.t==='TCV'));
     fOrig='Comercial';document.querySelectorAll('#origChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.o==='Comercial'));
@@ -1409,7 +1415,7 @@ async function saveSale(){const valor=getValor();if(!valor){flash('Escolha o pro
     parc=parc.map((p,i)=>{const o=editingParcelas[i];if(o&&+o.valor===+p.valor&&(o.vencimento||'')===(p.vencimento||'')){const np=Object.assign({},p,{pago:!!o.pago});if(o.dataPagamento)np.dataPagamento=o.dataPagamento;if(o.perdida)np.perdida=true;return np;}return p;});
   }
   const base={data:document.getElementById('f_data').value||todayISO(),cliente:document.getElementById('f_cliente').value.trim(),
-    instagram:document.getElementById('f_insta').value.trim(),produto:getProd(),origem:fOrig,tipo:fTipo,valor,
+    instagram:document.getElementById('f_insta').value.trim(),cpf_cnpj:document.getElementById('f_doc').value.trim(),endereco:document.getElementById('f_endereco').value.trim(),produto:getProd(),origem:fOrig,tipo:fTipo,valor,
     entrada:+document.getElementById('f_entrada').value||0,parcelas:parc,
     residual:{valor:+document.getElementById('f_resid').value||0,aDecidir:document.getElementById('f_adecidir').checked}};
   if(mode==='demo'){
