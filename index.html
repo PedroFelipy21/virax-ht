@@ -297,8 +297,13 @@
   .psel button{flex:1;border:0;background:transparent;color:var(--muted);padding:9px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
   .psel button.on{background:var(--violet);color:#fff}
   .parc{display:flex;flex-direction:column;gap:9px}
-  .parcrow{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;align-items:center}
+  .parcrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:9px;align-items:center}
   .parcrow .rm{border:0;background:var(--rose-dim);color:var(--rose);border-radius:9px;width:40px;height:42px;cursor:pointer;font-size:16px}
+  .parcrow.paid .pv,.parcrow.paid .pd{opacity:.82}
+  .parcrow .paidline{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:-1px}
+  .parcrow .paidline .pbadge{color:var(--emerald);font-weight:800;font-size:12px;white-space:nowrap}
+  .parcrow .paidline label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  .parcrow .paidline input.ppd{width:auto;flex:0 0 auto;padding:7px 10px;font-size:12.5px}
   .addparc{align-self:flex-start;border:1px dashed var(--border-3);background:transparent;color:var(--violet-2);border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer}
   .summ{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-radius:13px;background:var(--surface);border:1px solid var(--border);flex-wrap:wrap}
   .summ .st{font-size:12.5px;font-weight:700;color:var(--muted)}
@@ -1356,10 +1361,10 @@ function buildChips(){
     fProd=c.dataset.v;syncCustomWrap();updateSumm();});
   document.querySelectorAll('#origChips .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#origChips .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');fOrig=c.dataset.o;});
 }
-let editingId=null, editingParcelas=null;
+let editingId=null;
 function openModal(sale){
   if(!document.getElementById('prodChips').dataset.b){buildChips();document.getElementById('prodChips').dataset.b='1';}
-  editingId=sale?sale.id:null; editingParcelas=sale?(sale.parcelas||[]):null;
+  editingId=sale?sale.id:null;
   document.getElementById('mTitle').textContent=sale?'Editar venda':'Nova venda';
   document.getElementById('mSave').textContent=sale?'Salvar alterações':'Salvar venda';
   document.getElementById('parcList').innerHTML='';
@@ -1380,7 +1385,7 @@ function openModal(sale){
     else{fProd='custom';document.getElementById('f_cname').value=sale.produto||'';document.getElementById('f_cval').value=sale.valor||'';}
     syncCustomWrap();
     document.querySelectorAll('#prodChips .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===fProd));
-    (sale.parcelas||[]).forEach(p=>addParcRow(p.valor,p.vencimento));
+    (sale.parcelas||[]).forEach(p=>addParcRow(p));
   }else{
     document.getElementById('f_data').value=todayISO();
     ['f_cname','f_cval','f_cliente','f_insta','f_doc','f_endereco','f_entrada','f_resid'].forEach(id=>document.getElementById(id).value='');
@@ -1396,11 +1401,19 @@ function openModal(sale){
 function closeModal(){mscrim.classList.remove('show');}
 function getValor(){return (fProd==='custom'||fProd==='renov')?(+document.getElementById('f_cval').value||0):(+fProd||0);}
 function getProd(){if(fProd==='renov')return 'Renovação';return fProd==='custom'?(document.getElementById('f_cname').value.trim()||'Personalizado'):prodLabel(+fProd);}
-function addParcRow(v,d){const row=document.createElement('div');row.className='parcrow';
-  row.innerHTML=`<input type="number" min="0" step="100" class="pv nums" placeholder="Valor R$" value="${v||''}"><input type="date" class="pd" value="${d||''}"><button class="rm" type="button" aria-label="remover">✕</button>`;
+function addParcRow(p){p=p||{};const row=document.createElement('div');row.className='parcrow'+(p.pago?' paid':'')+(p.perdida?' lost':'');
+  if(p.pago)row.dataset.pago='1'; if(p.perdida)row.dataset.perdida='1';
+  const pe=p.dataPagamento||p.vencimento||'';
+  row.innerHTML=`<input type="number" min="0" step="100" class="pv nums" placeholder="Valor R$" value="${p.valor||''}"><input type="date" class="pd" value="${p.vencimento||''}"><button class="rm" type="button" aria-label="remover">✕</button>`
+    +(p.pago?`<div class="paidline"><span class="pbadge">✓ recebida</span><label>em</label><input type="date" class="ppd nums" value="${pe}"></div>`:'');
   row.querySelector('.rm').onclick=()=>{row.remove();updateSumm();};row.querySelectorAll('input').forEach(i=>i.oninput=updateSumm);
   document.getElementById('parcList').appendChild(row);updateSumm();}
-function readParc(){return [...document.querySelectorAll('#parcList .parcrow')].map(r=>({id:uid('p'),valor:+r.querySelector('.pv').value||0,vencimento:r.querySelector('.pd').value||'',pago:false})).filter(p=>p.valor>0);}
+function readParc(){return [...document.querySelectorAll('#parcList .parcrow')].map(r=>{
+  const p={id:uid('p'),valor:+r.querySelector('.pv').value||0,vencimento:r.querySelector('.pd').value||'',pago:r.dataset.pago==='1'};
+  if(r.dataset.perdida==='1')p.perdida=true;
+  if(p.pago){const e=r.querySelector('.ppd');p.dataPagamento=(e&&e.value)||p.vencimento||todayISO();}
+  return p;
+}).filter(p=>p.valor>0);}
 function updateSumm(){const total=getValor();const ent=+document.getElementById('f_entrada').value||0;const resid=+document.getElementById('f_resid').value||0;
   const parc=readParc().reduce((s,p)=>s+p.valor,0);const alloc=ent+parc+resid;const diff=total-alloc;const el=document.getElementById('summ');
   if(!total){el.className='summ';el.innerHTML='<span class="st">Escolha um produto para começar.</span>';return;}
@@ -1410,10 +1423,7 @@ function updateSumm(){const total=getValor();const ent=+document.getElementById(
   else{el.className='summ bad';el.innerHTML=base+`<span class="status">${money(-diff)} a mais</span>`;}
 }
 async function saveSale(){const valor=getValor();if(!valor){flash('Escolha o produto / informe o valor.');return;}
-  let parc=readParc();
-  if(editingId&&Array.isArray(editingParcelas)){ // preserva status pago/perda das parcelas na edição (por posição+valor+data)
-    parc=parc.map((p,i)=>{const o=editingParcelas[i];if(o&&+o.valor===+p.valor&&(o.vencimento||'')===(p.vencimento||'')){const np=Object.assign({},p,{pago:!!o.pago});if(o.dataPagamento)np.dataPagamento=o.dataPagamento;if(o.perdida)np.perdida=true;return np;}return p;});
-  }
+  const parc=readParc(); // pago/perdida/dataPagamento (recebida em) ja vem de cada linha
   const base={data:document.getElementById('f_data').value||todayISO(),cliente:document.getElementById('f_cliente').value.trim(),
     instagram:document.getElementById('f_insta').value.trim(),cpf_cnpj:document.getElementById('f_doc').value.trim(),endereco:document.getElementById('f_endereco').value.trim(),produto:getProd(),origem:fOrig,tipo:fTipo,valor,
     entrada:+document.getElementById('f_entrada').value||0,parcelas:parc,
